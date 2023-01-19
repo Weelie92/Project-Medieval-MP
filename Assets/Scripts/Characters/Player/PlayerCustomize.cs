@@ -19,21 +19,30 @@ public class PlayerCustomize : MonoBehaviour
     private CinemachineVirtualCamera _vcam;
     private Cinemachine3rdPersonFollow _vcamFollow;
     private PlayerAiming _playerAiming;
+    public GameObject _tempObject = null;
+    private Transform[] _allChildObjects;
+
+    public Canvas customizeCanvas;
 
     public Transform _lookAt;
     [SerializeField] private Cinemachine.AxisState xAxis;
     [SerializeField] private Cinemachine.AxisState yAxis;
     private Cinemachine.CinemachineInputProvider inputAxisProvider;
 
+    public bool isMale = true;
+
     private Quaternion _targetRotation;
     private bool _cameraMoving = false;
     private bool _movingCamera = false;
 
+    
     void Awake()
     {
+        _player = GameObject.Find("Player");
         _playerControls = new PlayerControls();
         _playerAiming = GetComponent<PlayerAiming>();
         _playerAnimator = GetComponent<Animator>();
+        _allChildObjects = _player.GetComponentsInChildren<Transform>();
 
         BuildLists();
 
@@ -50,6 +59,7 @@ public class PlayerCustomize : MonoBehaviour
         enabledObjects.Clear();
 
         // set default male character
+        
         ActivateItem(male.headAllElements[0]);
         ActivateItem(male.eyebrow[0]);
         ActivateItem(male.facialHair[0]);
@@ -63,7 +73,8 @@ public class PlayerCustomize : MonoBehaviour
         ActivateItem(male.hips[0]);
         ActivateItem(male.leg_Right[0]);
         ActivateItem(male.leg_Left[0]);
-        
+        ActivateItem(allGender.all_Hair[0]);
+
 
 
         _playerControls.Enable();
@@ -79,27 +90,12 @@ public class PlayerCustomize : MonoBehaviour
         inputAxisProvider = GetComponent<Cinemachine.CinemachineInputProvider>();
         xAxis.SetInputAxisProvider(0, inputAxisProvider);
         yAxis.SetInputAxisProvider(1, inputAxisProvider);
-
-        Debug.Log("One");
     }
 
-    /*  
-     *  Camera distance 1.7f
-     *  Shoulder offset (0, -1, 0)    
-    */
-
-    public void OnPointerEnter(PointerEventData data)
-    {
-        Debug.Log("Two");
-    }
 
     public void Initialize(Vector3 position)
     {
-        // reset script values
-        Debug.Log("Initialize");
-        
         _vcamFollow = _vcam.GetCinemachineComponent<Cinemachine3rdPersonFollow>();
-        _player = GameObject.Find("Player");
         _player.GetComponent<PlayerController>()._isCustomizing = true;
         _player.GetComponent<PlayerController>().enabled = false;
         _player.GetComponent<HeadLookAtDirection>().enabled = false;
@@ -120,6 +116,8 @@ public class PlayerCustomize : MonoBehaviour
         
 
         _cameraMoving = true;
+
+        customizeCanvas.gameObject.SetActive(true);
 
         Invoke(nameof(CameraStop), 1f);
 
@@ -177,6 +175,9 @@ public class PlayerCustomize : MonoBehaviour
     
     public CharacterObjectListsAllGender allGender;
 
+    
+
+    
     private void BuildLists()
     {
         
@@ -196,6 +197,7 @@ public class PlayerCustomize : MonoBehaviour
         BuildList(male.leg_Right, "Male_11_Leg_Right");
         BuildList(male.leg_Left, "Male_12_Leg_Left");
 
+        
         //build out female lists
         BuildList(female.headAllElements, "Female_Head_All_Elements");
         BuildList(female.headNoElements, "Female_Head_No_Elements");
@@ -228,7 +230,7 @@ public class PlayerCustomize : MonoBehaviour
         BuildList(allGender.knee_Attachement_Right, "All_10_Knee_Attachement_Right");
         BuildList(allGender.knee_Attachement_Left, "All_11_Knee_Attachement_Left");
         BuildList(allGender.elf_Ear, "Elf_Ear");
-
+        
         
         
     }
@@ -236,7 +238,7 @@ public class PlayerCustomize : MonoBehaviour
     void BuildList(List<GameObject> targetList, string characterPart)
     {
         Transform[] rootTransform = gameObject.GetComponentsInChildren<Transform>();
-
+        
         // declare target root transform
         Transform targetRoot = null;
 
@@ -275,14 +277,126 @@ public class PlayerCustomize : MonoBehaviour
         }
     }
 
-    void ActivateItem(GameObject go)
+    public void ActivateItem(GameObject go)
     {
-        // enable item
-        go.SetActive(true);
+        
+        
+        if (!enabledObjects.Contains(go))
+        {
+            for (int i = 0; i < enabledObjects.Count; i++)
+            {
+                int result = string.Compare(enabledObjects[i].name, 0, go.name, 0, go.name.Length - 2);
+                
+                if (result == 0)
+                {
+                    Debug.Log("Changed");
+                    enabledObjects[i].SetActive(false);
+                    enabledObjects.Remove(enabledObjects[i]);
+                    break;
+                }
+            }
 
-        // add item to the enabled items list
-        enabledObjects.Add(go);
+            enabledObjects.Add(go);
+            go.SetActive(true);
+        }
     }
+
+    public void TempActivateItem(GameObject go)
+    {
+        if (go == null)
+        {
+            _tempObject.SetActive(false);
+            
+            foreach (GameObject g in enabledObjects)
+            {
+                g.SetActive(true);
+            }
+
+            return;
+        }
+        
+        if (!enabledObjects.Contains(go))
+        {
+            for (int i = 0; i < enabledObjects.Count; i++)
+            {
+                int result = string.Compare(enabledObjects[i].name, 0, go.name, 0, go.name.Length - 2);
+
+                if (result == 0)
+                {
+                    
+
+                    enabledObjects[i].SetActive(false);
+                    // enabledObjects.Remove(enabledObjects[i]);
+
+                    foreach (Transform child in _allChildObjects)
+                    {
+                        if (child.name == go.name)
+                        {
+                            _tempObject = child.gameObject;
+                            child.gameObject.SetActive(true);
+                            //child.gameObject.SetActive(true);
+                            //enabledObjects.Add(child.gameObject);
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    public void ChangeGender()
+    {
+        // disable any enabled objects before clear
+        if (enabledObjects.Count != 0)
+        {
+            foreach (GameObject g in enabledObjects)
+            {
+                g.SetActive(false);
+            }
+        }
+
+        enabledObjects.Clear();
+
+
+        if (isMale)
+        {
+            ActivateItem(male.headAllElements[0]);
+            ActivateItem(male.eyebrow[0]);
+            ActivateItem(male.facialHair[0]);
+            ActivateItem(male.torso[0]);
+            ActivateItem(male.arm_Upper_Right[0]);
+            ActivateItem(male.arm_Upper_Left[0]);
+            ActivateItem(male.arm_Lower_Right[0]);
+            ActivateItem(male.arm_Lower_Left[0]);
+            ActivateItem(male.hand_Right[0]);
+            ActivateItem(male.hand_Left[0]);
+            ActivateItem(male.hips[0]);
+            ActivateItem(male.leg_Right[0]);
+            ActivateItem(male.leg_Left[0]);
+            ActivateItem(allGender.all_Hair[0]);
+
+
+        }
+        else
+        {
+            ActivateItem(female.headAllElements[0]);
+            ActivateItem(female.eyebrow[0]);
+            ActivateItem(female.torso[0]);
+            ActivateItem(female.arm_Upper_Right[0]);
+            ActivateItem(female.arm_Upper_Left[0]);
+            ActivateItem(female.arm_Lower_Right[0]);
+            ActivateItem(female.arm_Lower_Left[0]);
+            ActivateItem(female.hand_Right[0]);
+            ActivateItem(female.hand_Left[0]);
+            ActivateItem(female.hips[0]);
+            ActivateItem(female.leg_Right[0]);
+            ActivateItem(female.leg_Left[0]);
+            ActivateItem(allGender.all_Hair[0]);
+
+        }
+    }
+    
+   
 
     // classe for keeping the lists organized, allows for simple switching from male/female objects
     [System.Serializable]
@@ -303,6 +417,8 @@ public class PlayerCustomize : MonoBehaviour
         public List<GameObject> leg_Right;
         public List<GameObject> leg_Left;
     }
+    
+    
 
     // classe for keeping the lists organized, allows for organization of the all gender items
     [System.Serializable]
@@ -331,6 +447,12 @@ public class PlayerCustomize : MonoBehaviour
         _cameraMoving = false;
     }
 
+    public void SaveCustomization()
+    {
+        _player.GetComponent<PlayerController>()._isCustomizing = false;
+        Invoke(nameof(Disable), 1f);
+    }
+
     
 
 
@@ -353,7 +475,7 @@ public class PlayerCustomize : MonoBehaviour
     public void MoveCamera(InputAction.CallbackContext context)
     {
         if (_player == null) return;
-
+        
         switch (context.phase)
         {
             case InputActionPhase.Started:
@@ -372,6 +494,7 @@ public class PlayerCustomize : MonoBehaviour
         _player.GetComponent<PlayerAiming>().enabled = true;
         _player.GetComponent<PlayerAiming>().xAxis.Value = 0;
         _player.GetComponent<PlayerAiming>().yAxis.Value = 0;
+        customizeCanvas.gameObject.SetActive(false);
         enabled = false;
     }
 }

@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class Interactable : MonoBehaviour
 {
-    private bool _isInteractable = true;
+    // private bool _isInteractable = true;
     public Vector3 lookAtRotation;
 
     public Canvas _interactE;

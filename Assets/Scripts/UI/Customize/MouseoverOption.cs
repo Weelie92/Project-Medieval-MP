@@ -2,22 +2,32 @@ using UnityEngine.Events;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
-public class MouseoverOption : MonoBehaviour, IPointerEnterHandler
+public class MouseoverOption : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
 {
-    public int selectedOption;
-    public GameObject[] options;
-    public UnityEvent onOptionSelected;
+    
+
+    public PlayerCustomize playerCustomize;
+
+    private void Start()
+    {
+        playerCustomize = GameObject.Find("Player").GetComponent<PlayerCustomize>();
+    }
 
     public void OnPointerEnter(PointerEventData eventData)
     {
-        for (int i = 0; i < options.Length; i++)
-        {
-            if (eventData.pointerEnter.gameObject == options[i])
-            {
-                selectedOption = i + 1;
-                onOptionSelected.Invoke();
-                break;
-            }
-        }
+        Debug.Log("Enter");
+        playerCustomize.TempActivateItem(eventData.pointerEnter);
     }
+
+    public void OnPointerExit(PointerEventData eventData)
+    {
+        Debug.Log("Exit");
+        playerCustomize.TempActivateItem(null);
+    }
+
+    public void OnPointerClick(PointerEventData eventData)
+    {
+        Debug.Log(eventData.pointerEnter.name);
+    }
+       
 }
