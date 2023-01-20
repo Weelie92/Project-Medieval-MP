@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using TMPro;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -16,8 +17,15 @@ public class BuildCustomizeUI : MonoBehaviour
 
     public Toggle elf_Ear;
 
-    public Button buttonPrefab;
     public Canvas options;
+
+    public Button buttonPrefab;
+    public Button colorButtonPrefab;
+
+    public Canvas skincolors;
+    public Canvas hairColors;
+    public Canvas eyeColors;
+    public Canvas bodyArtColors;
 
     public List<GameObject> maleHeadElements;
     public List<GameObject> femaleHeadElements;
@@ -36,6 +44,7 @@ public class BuildCustomizeUI : MonoBehaviour
 
     private void Start()
     {
+        
         maleButton.onClick.AddListener(() => { OnClickMaleButton(); });
 
         femaleButton.onClick.AddListener(() => { OnClickFemaleButton(); });
@@ -51,6 +60,13 @@ public class BuildCustomizeUI : MonoBehaviour
         accept.onClick.AddListener(() => { OnClickAccept(); });
 
         elf_Ear.onValueChanged.AddListener((bool value) => { OnClickElf_Ear(value); });
+
+        SkincolorShow();
+        HaircolorShow();
+        EyecolorShow();
+        BodyArtcolorShow();
+
+        gameObject.SetActive(false);
     }
 
     void OnClickMaleButton()
@@ -226,6 +242,48 @@ public class BuildCustomizeUI : MonoBehaviour
         playerCustomize.ActivateItem(element);
     }
 
+    void SkincolorShow()
+    {
+        foreach (Color color in playerCustomize.colorSkin)
+        {
+            Button button = Instantiate(colorButtonPrefab, skincolors.transform);
+            button.GetComponent<Image>().color = color;
+            button.onClick.AddListener(() => { playerCustomize.ChangeMaterialColor("_Color_Skin", color); });
+        }
+    }
+
+    void HaircolorShow()
+    {
+        foreach (Color color in playerCustomize.colorHair)
+        {
+            Button button = Instantiate(colorButtonPrefab, hairColors.transform);
+            button.GetComponent<Image>().color = color;
+            button.onClick.AddListener(() => { playerCustomize.ChangeMaterialColor("_Color_Hair", color); });
+        }
+    }
+
+    void EyecolorShow()
+    {
+        foreach (Color color in playerCustomize.colorEyes)
+        {
+            Button button = Instantiate(colorButtonPrefab, eyeColors.transform);
+            button.GetComponent<Image>().color = color;
+            button.onClick.AddListener(() => { playerCustomize.ChangeMaterialColor("_Color_Eyes", color); });
+        }
+    }
+
+    void BodyArtcolorShow()
+    {
+        foreach (Color color in playerCustomize.colorBodyArt)
+        {
+            Button button = Instantiate(colorButtonPrefab, bodyArtColors.transform);
+            button.GetComponent<Image>().color = color;
+            button.onClick.AddListener(() => { playerCustomize.ChangeMaterialColor("_Color_BodyArt", color); });
+        }
+    }
+
+
+
     void DestroyChildren()
     {
         for (int i = options.transform.childCount - 1; i >= 0; i--)
@@ -234,7 +292,7 @@ public class BuildCustomizeUI : MonoBehaviour
             // code to remove the child
             Destroy(child.gameObject);
         }
-
+        
     }
     
 

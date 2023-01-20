@@ -9,7 +9,7 @@ using UnityEngine.PlayerLoop;
 using UnityEngine.UIElements;
 using UnityEditor.UIElements;
 using static Cinemachine.AxisState;
-
+using Cursor = UnityEngine.Cursor;
 
 public class PlayerCustomize : MonoBehaviour
 {
@@ -35,7 +35,38 @@ public class PlayerCustomize : MonoBehaviour
     private bool _cameraMoving = false;
     private bool _movingCamera = false;
 
-    
+    [Header("Material")]
+    public Material mat;
+
+    [Header("Gear Colors")]
+    public Color[] colorGearPrimary = { new Color(0.2862745f, 0.4f, 0.4941177f), new Color(0.4392157f, 0.1960784f, 0.172549f), new Color(0.3529412f, 0.3803922f, 0.2705882f), new Color(0.682353f, 0.4392157f, 0.2196079f), new Color(0.4313726f, 0.2313726f, 0.2705882f), new Color(0.5921569f, 0.4941177f, 0.2588235f), new Color(0.482353f, 0.4156863f, 0.3529412f), new Color(0.2352941f, 0.2352941f, 0.2352941f), new Color(0.2313726f, 0.4313726f, 0.4156863f) };
+    public Color[] colorGearSecondary = { new Color(0.7019608f, 0.6235294f, 0.4666667f), new Color(0.7372549f, 0.7372549f, 0.7372549f), new Color(0.1647059f, 0.1647059f, 0.1647059f), new Color(0.2392157f, 0.2509804f, 0.1882353f) };
+
+    [Header("Metal Colors")]
+    public Color[] colorMetalPrimary = { new Color(0.6705883f, 0.6705883f, 0.6705883f), new Color(0.5568628f, 0.5960785f, 0.6392157f), new Color(0.5568628f, 0.6235294f, 0.6f), new Color(0.6313726f, 0.6196079f, 0.5568628f), new Color(0.6980392f, 0.6509804f, 0.6196079f) };
+    public Color[] colorMetalSeconday = { new Color(0.3921569f, 0.4039216f, 0.4117647f), new Color(0.4784314f, 0.5176471f, 0.5450981f), new Color(0.3764706f, 0.3607843f, 0.3372549f), new Color(0.3254902f, 0.3764706f, 0.3372549f), new Color(0.4f, 0.4039216f, 0.3568628f) };
+
+    [Header("Leather Colors")]
+    public Color[] colorLeatherPrimary;
+    public Color[] colorLeatherSecondary;
+
+    [Header("Skin Colors")]
+    public Color[] colorSkin = { new Color(1.00000f, 0.87843f, 0.74118f), new Color(1f, 0.8000001f, 0.682353f), new Color(1f, 0.80392f, 0.58039f), new Color(0.87843f, 0.68235f, 0.41176f), new Color(0.8196079f, 0.6352941f, 0.4588236f), new Color(0.5647059f, 0.4078432f, 0.3137255f), new Color(0.55294f, 0.33333f, 0.14118f), new Color(0.43529f, 0.30980f, 0.11373f) };
+
+    [Header("Hair Colors")]
+    public Color[] colorHair = { new Color(0.3098039f, 0.254902f, 0.1764706f), new Color(0.2196079f, 0.2196079f, 0.2196079f), new Color(0.8313726f, 0.6235294f, 0.3607843f), new Color(0.8901961f, 0.7803922f, 0.5490196f), new Color(0.8000001f, 0.8196079f, 0.8078432f), new Color(0.6862745f, 0.4f, 0.2352941f), new Color(0.5450981f, 0.427451f, 0.2156863f), new Color(0.3098039f, 0.254902f, 0.1764706f), new Color(0.1764706f, 0.1686275f, 0.1686275f), new Color(0.3843138f, 0.2352941f, 0.0509804f), new Color(0.6196079f, 0.6196079f, 0.6196079f), new Color(0.6196079f, 0.6196079f, 0.6196079f), new Color(0.2431373f, 0.2039216f, 0.145098f), new Color(0.1764706f, 0.1686275f, 0.1686275f)};
+
+    [Header("Eye Colors")]
+    public Color[] colorEyes = { new Color(1.00000f, 0.87843f, 0.74118f), new Color(1.00000f, 0.87843f, 0.74118f), new Color(1.00000f, 0.87843f, 0.74118f), new Color(1.00000f, 0.87843f, 0.74118f), new Color(1.00000f, 0.87843f, 0.74118f), new Color(1.00000f, 0.87843f, 0.74118f), new Color(1.00000f, 0.87843f, 0.74118f), new Color(1.00000f, 0.87843f, 0.74118f), };
+
+    [Header("Scar Colors")]
+    public Color[] colorScar = { };
+
+    [Header("Body Art Colors")]
+    public Color[] colorBodyArt = { new Color(0.0509804f, 0.6745098f, 0.9843138f), new Color(0.7215686f, 0.2666667f, 0.2666667f), new Color(0.3058824f, 0.7215686f, 0.6862745f), new Color(0.9254903f, 0.882353f, 0.8509805f), new Color(0.3098039f, 0.7058824f, 0.3137255f), new Color(0.5294118f, 0.3098039f, 0.6470588f), new Color(0.8666667f, 0.7764707f, 0.254902f), new Color(0.2392157f, 0.4588236f, 0.8156863f) };
+
+
+
     void Awake()
     {
         _player = GameObject.Find("Player");
@@ -133,7 +164,6 @@ public class PlayerCustomize : MonoBehaviour
         {
             if (_cameraMoving)
             {
-                //_vcam.transform.position = Vector3.Lerp(_mainCameraPos, _cameraPosition, Time.deltaTime * 5f);
                 _vcamFollow.CameraDistance = Mathf.Lerp(_vcamFollow.CameraDistance, 1.7f, Time.deltaTime * 5f);
                 _vcamFollow.ShoulderOffset = Vector3.Lerp(_vcamFollow.ShoulderOffset, new Vector3(0, -1, 0), Time.deltaTime * 5f);
                 
@@ -146,10 +176,11 @@ public class PlayerCustomize : MonoBehaviour
                 yAxis.Update(Time.deltaTime);
                 _lookAt.eulerAngles = new Vector3(yAxis.Value, xAxis.Value, 0);
             }
+            
+            
         }
         else
         {            
-            //_vcam.transform.position = Vector3.Lerp(_mainCameraPos, _cameraPosition, Time.deltaTime * 5f);
             _vcamFollow.CameraDistance = Mathf.Lerp(_vcamFollow.CameraDistance, 3f, Time.deltaTime * 5f);
             _vcamFollow.ShoulderOffset = Vector3.Lerp(_vcamFollow.ShoulderOffset, new Vector3(1, -.5f, 0), Time.deltaTime * 5f);
 
@@ -267,8 +298,7 @@ public class PlayerCustomize : MonoBehaviour
             // add object to the targeted object list
             targetList.Add(go);
 
-            // collect the material for the random character, only if null in the inspector;
-            // TODO: WHAT
+        // collect the material for the character, only if null in the inspector;
             //if (!mat)
             //{
             //    if (go.GetComponent<SkinnedMeshRenderer>())
@@ -395,7 +425,27 @@ public class PlayerCustomize : MonoBehaviour
 
         }
     }
-    
+
+    public void ChangeMaterialColor(string target, Color color)
+    {
+        switch (target.ToString())
+        {
+            case "_Color_Skin":
+                mat.SetColor("_Color_Skin", color);
+                mat.SetColor("_Color_Stubble", color);
+                break;
+            case "_Color_Hair":
+                mat.SetColor("_Color_Hair", color);
+                break;
+            case "_Color_Eyes":
+                mat.SetColor("_Color_Eyes", color);
+                break;
+            case "_Color_BodyArt":
+                mat.SetColor("_Color_BodyArt", color);
+                break;
+
+        }
+    }    
    
 
     // classe for keeping the lists organized, allows for simple switching from male/female objects
@@ -440,7 +490,12 @@ public class PlayerCustomize : MonoBehaviour
         public List<GameObject> knee_Attachement_Left;
         public List<GameObject> all_12_Extra;
         public List<GameObject> elf_Ear;
+
+        
     }
+
+    public List<string> ColorTargets = new List<string>();
+    
 
     void CameraStop()
     {
@@ -474,19 +529,21 @@ public class PlayerCustomize : MonoBehaviour
 
     public void MoveCamera(InputAction.CallbackContext context)
     {
-        if (_player == null) return;
+        if (_player == null || EventSystem.current.IsPointerOverGameObject()) return;
         
         switch (context.phase)
         {
             case InputActionPhase.Started:
                 _movingCamera = true;
+                Cursor.lockState = CursorLockMode.Locked;
                 break;
             case InputActionPhase.Canceled:
                 _movingCamera = false;
+                Cursor.lockState = CursorLockMode.None;
                 break;
         }
     }
-
+    
     void Disable()
     {
         _player.GetComponent<PlayerController>().enabled = true;
@@ -498,3 +555,5 @@ public class PlayerCustomize : MonoBehaviour
         enabled = false;
     }
 }
+
+

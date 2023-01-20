@@ -48,6 +48,8 @@ namespace PsychoticLab
         public Color[] elfHair = { new Color(0.9764706f, 0.9686275f, 0.9568628f), new Color(0.1764706f, 0.1686275f, 0.1686275f), new Color(0.8980393f, 0.7764707f, 0.6196079f) };
         public Color elfStubble = new Color(0.8627452f, 0.7294118f, 0.6862745f);
 
+        
+
         [Header("Scar Colors")]
         public Color whiteScar = new Color(0.9294118f, 0.6862745f, 0.5921569f);
         public Color brownScar = new Color(0.6980392f, 0.5450981f, 0.4f);
