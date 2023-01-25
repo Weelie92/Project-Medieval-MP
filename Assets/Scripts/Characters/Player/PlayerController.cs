@@ -1,6 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
-using RPGCharacterAnims;
+using RPGCharacterAnims.Actions;
 using RPGCharacterAnims.Extensions;
 using RPGCharacterAnims.Lookups;
 using Unity.VisualScripting;
@@ -26,6 +26,10 @@ public class PlayerController : PlayerStats
     private JUFootPlacement _footPlacementScript;
     private Animator _playerAnimator;
     private CheckInteraction _checkInteraction;
+    private ShowInventory _showInventory;
+    
+    public InventoryItemList inventoryItemList;
+    public ItemPrefabList itemPrefabList;
 
 
 
@@ -35,12 +39,13 @@ public class PlayerController : PlayerStats
     private float _fallThreshold = 0.5f;
     private float _fallTimer = 0f;
     public bool _isCustomizing = false;
+    private bool _attackLeft = true;
 
 
 
 
 
-    
+
 
 
     void Awake()
@@ -54,7 +59,8 @@ public class PlayerController : PlayerStats
         _footPlacementScript = GetComponent<JUFootPlacement>();
         PlayerRunSpeed = PlayerWalkSpeed * 2f;
         _checkInteraction = GetComponent<CheckInteraction>();
-        
+        _showInventory = GetComponent<ShowInventory>();
+
 
 
         // Other
@@ -88,6 +94,9 @@ public class PlayerController : PlayerStats
         _playerControls.Land.Pause.started += Pause;
         _playerControls.Land.Pause.canceled += Pause;
 
+        _playerControls.Land.Inventory.started += Inventory;
+        _playerControls.Land.Inventory.canceled += Inventory;
+
     }
 
     void Start()
@@ -102,13 +111,21 @@ public class PlayerController : PlayerStats
     {
         
         PlayerGrounded = _controller.isGrounded;
-        _playerAnimator.SetBool("isRunning", PlayerRunning);
+
+        _playerAnimator.SetBool("isAction", PlayerAttacking || PlayerOffhanding);
+
+        _playerAnimator.SetBool("isRunning", !PlayerAttacking && PlayerRunning);
+        
+
+
+
+
+
         _playerAnimator.SetBool("isMoving", PlayerMoving);
         //_playerAnimator.SetBool("isFalling", !_controller.isGrounded);
 
 
         Movement();
-        _checkInteraction.CheckInteractable();
 
 
 
@@ -117,7 +134,7 @@ public class PlayerController : PlayerStats
         if (PlayerAttacking && Time.time > NextAttackTime)
         {
             //TODO: Make attack dynamic based on weapon
-            NextAttackTime = Time.time + 2f;
+            NextAttackTime = Time.time + 1f;
 
             Attack();
         }
@@ -137,13 +154,13 @@ public class PlayerController : PlayerStats
 
         
 
-        _controller.Move((PlayerRunning ? PlayerRunSpeed : PlayerWalkSpeed) * Time.deltaTime * moveNew);
+        _controller.Move((!PlayerAttacking && PlayerRunning ? PlayerRunSpeed : PlayerWalkSpeed) * Time.deltaTime * moveNew);
 
         if (PlayerGrounded && _gravityVector.y < 0)
         {
             _footPlacementScript.EnableDynamicBodyPlacing = true;
             _footPlacementScript.SmoothIKTransition = true;
-            _gravityVector.y = 0f;
+            _gravityVector.y = -_controller.stepOffset / Time.deltaTime;
         }
 
         // Gravity 
@@ -183,26 +200,74 @@ public class PlayerController : PlayerStats
             // Jump
             _footPlacementScript.EnableDynamicBodyPlacing = false;
             _footPlacementScript.SmoothIKTransition = false;
-            _playerAnimator.SetTrigger("Jump");
+            _playerAnimator.SetAnimatorTrigger(AnimatorTrigger.JumpTrigger);
             _gravityVector.y = PlayerJumpForce;
             
 
         }
     }
 
+
+
+
+
     
-
-
-
-
+    
     private void Attack()
-    {
-        //TODO: PLAY ATTACK ANIMATION
-
-
+    {        
+        switch (PlayerWeapon)
+        {
+            case "OneHand":
+                break;
+            case "Unarmed":
+                if (PlayerMoving)
+                {
+                    _playerAnimator.SetActionTrigger(AnimatorTrigger.AttackTrigger, _attackLeft ? 1 : 2);
+                    _attackLeft = !_attackLeft;
+                }
+                else
+                {
+                    _playerAnimator.SetActionTrigger(AnimatorTrigger.AttackTrigger, (int)Mathf.Round(Random.Range(1, 6)));
+                }
+                break;
+            default:
+                _playerAnimator.SetTrigger("Attack");
+                break;
+        }
     }
 
-    
+    public void LootItem(Item item)
+    {
+
+        // Check if item already in inventory
+        for (int i = 0; i < PlayerInventorySpace; i++)
+        {
+            InventoryItem tempInv = inventoryItemList.items[i].GetComponent<InventoryItem>();
+
+            if (tempInv.itemName == item.itemName && tempInv.stackSize < tempInv.maxStackSize)
+            {
+                tempInv.stackSize++;
+                tempInv.UpdateItem();
+                return;
+            } 
+        }
+
+        // Add item to inventory
+        for (int i = 0; i < PlayerInventorySpace; i++)
+        {
+            InventoryItem tempInv = inventoryItemList.items[i].GetComponent<InventoryItem>();
+
+            if (tempInv.itemName == "Empty")
+            {
+                tempInv.itemName = item.itemName;
+                tempInv.SetStackSize(item);
+                tempInv.stackSize = 1;
+                tempInv.UpdateItem();
+
+                return;
+            }
+        }
+    }
 
     public void TakeDamage(float damageTaken)
     {
@@ -310,7 +375,7 @@ public class PlayerController : PlayerStats
     {
         switch (context.phase)
         {
-            case InputActionPhase.Started:
+            case InputActionPhase.Started:               
                 if (_checkInteraction.interactableObject != null)
                 {
                     _checkInteraction.interactableObject.GetComponent<Interactable>().Interact();
@@ -364,7 +429,9 @@ public class PlayerController : PlayerStats
         {
             case InputActionPhase.Started:
                 //TODO: CHANGE ATTACKING ANIMATION
-                
+                //_playerAnimator.SetBool("isAction", true);
+                PlayerAttacking = true;
+
                 break;
 
             case InputActionPhase.Performed:
@@ -372,6 +439,8 @@ public class PlayerController : PlayerStats
 
             case InputActionPhase.Canceled:
                 //TODO: CHANGE ATTACK ANIMaTION
+                //_playerAnimator.SetBool("isAction", false);
+                PlayerAttacking = false;
                 break;
         }
     }
@@ -384,7 +453,7 @@ public class PlayerController : PlayerStats
 
                 //TODO: Change offhanding animation
                 PlayerOffhanding = true;
-                _playerAnimator.SetBool("isOffhanding", true);
+                //_playerAnimator.SetBool("isAction", true);
                 break;
 
             case InputActionPhase.Performed:
@@ -393,7 +462,9 @@ public class PlayerController : PlayerStats
 
             case InputActionPhase.Canceled:
                 PlayerOffhanding = false;
-                _playerAnimator.SetBool("isOffhanding", false);
+                
+                //_playerAnimator.SetBool("isAction", false);
+                
                 //TODO: Change offhanding animation
                 break;
         }
@@ -405,7 +476,9 @@ public class PlayerController : PlayerStats
         switch (context.phase)
         {
             case InputActionPhase.Started:
+                
                 PlayerRunning = true;
+                
                 break;
 
             case InputActionPhase.Performed:
@@ -433,6 +506,22 @@ public class PlayerController : PlayerStats
             case InputActionPhase.Canceled:
                 break;
             }
+    }
+
+    public void Inventory(InputAction.CallbackContext context)
+    {
+        switch (context.phase)
+        {
+            case InputActionPhase.Started:
+                _showInventory.ToggleInventory();
+                break;
+
+            case InputActionPhase.Performed:
+                break;
+
+            case InputActionPhase.Canceled:
+                break;
+        }
     }
 
 }

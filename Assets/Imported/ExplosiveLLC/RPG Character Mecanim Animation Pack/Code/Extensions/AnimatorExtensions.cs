@@ -21,7 +21,6 @@ namespace RPGCharacterAnims.Extensions
         /// <param name="trigger">The type of trigger.</param>
         public static void SetAnimatorTrigger(this Animator animator, AnimatorTrigger trigger)
         {
-			Debug.Log($"SetAnimatorTrigger: {trigger} - {( int )trigger}");
 			animator.SetInteger(AnimationParameters.TriggerNumber, (int)trigger);
             animator.SetTrigger(AnimationParameters.Trigger);
         }
@@ -37,7 +36,6 @@ namespace RPGCharacterAnims.Extensions
         /// <param name="actionNumber">The type of action to set.</param>
         public static void SetActionTrigger(this Animator animator, AnimatorTrigger trigger, int actionNumber)
         {
-            Debug.Log($"SetActionTrigger: {trigger} - {(int)trigger} - action {actionNumber}");
             animator.SetInteger(AnimationParameters.Action, actionNumber);
             SetAnimatorTrigger(animator, trigger);
         }

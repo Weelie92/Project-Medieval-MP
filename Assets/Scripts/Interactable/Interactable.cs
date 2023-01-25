@@ -10,6 +10,7 @@ public class Interactable : MonoBehaviour
     public Canvas _interactE;
     public GameObject _player;
 
+
     private void Start()
     {
         _interactE = GetComponentInChildren<Canvas>();
@@ -28,7 +29,10 @@ public class Interactable : MonoBehaviour
                 _interactE.enabled = false;
                 _player.GetComponent<PlayerCustomize>().enabled = true;
                 _player.GetComponent<PlayerCustomize>().Initialize(lookAtRotation);
-
+                break;
+            case "Lootable":
+                _interactE.enabled = false;
+                _player.GetComponent<PlayerController>().LootItem(gameObject.GetComponent<Item>());
                 break;
             default:
                 break;

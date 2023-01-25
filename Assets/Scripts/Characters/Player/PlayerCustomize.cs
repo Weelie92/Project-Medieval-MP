@@ -131,6 +131,7 @@ public class PlayerCustomize : MonoBehaviour
         _player.GetComponent<PlayerController>().enabled = false;
         _player.GetComponent<HeadLookAtDirection>().enabled = false;
         _player.GetComponent<PlayerAiming>().enabled = false;
+        _player.GetComponent<CheckInteraction>().enabled = false;
 
 
         _playerAnimator.SetBool("isMoving", false);
@@ -549,6 +550,7 @@ public class PlayerCustomize : MonoBehaviour
         _player.GetComponent<PlayerController>().enabled = true;
         _player.GetComponent<HeadLookAtDirection>().enabled = true;
         _player.GetComponent<PlayerAiming>().enabled = true;
+        _player.GetComponent<CheckInteraction>().enabled = true;
         _player.GetComponent<PlayerAiming>().xAxis.Value = 0;
         _player.GetComponent<PlayerAiming>().yAxis.Value = 0;
         customizeCanvas.gameObject.SetActive(false);

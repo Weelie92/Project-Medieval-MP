@@ -16,7 +16,7 @@ public class CheckInteraction : MonoBehaviour
         interactableObject = null;
     }
 
-    public void CheckInteractable()
+    public void Update()
     {
         Ray ray = new Ray(head.position, Camera.main.transform.forward);
 
