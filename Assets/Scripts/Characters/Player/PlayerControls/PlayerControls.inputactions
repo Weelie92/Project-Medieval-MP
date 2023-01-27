@@ -362,6 +362,34 @@
                     "isPartOfComposite": false
                 }
             ]
+        },
+        {
+            "name": "Survey",
+            "id": "5b02c463-6118-4d54-b521-e55b8bfafd41",
+            "actions": [
+                {
+                    "name": "Close",
+                    "type": "Button",
+                    "id": "caba7ce1-9c69-4463-b838-347bbef3946b",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                }
+            ],
+            "bindings": [
+                {
+                    "name": "",
+                    "id": "238e813b-9096-431a-bd62-4d4f78982a7d",
+                    "path": "<Keyboard>/escape",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Close",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                }
+            ]
         }
     ],
     "controlSchemes": []

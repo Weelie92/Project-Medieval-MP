@@ -10,7 +10,6 @@ using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using UnityEngine.XR;
-using static UnityEditor.Experimental.GraphView.GraphView;
 
 public class PlayerController : PlayerStats
 {
@@ -38,7 +37,8 @@ public class PlayerController : PlayerStats
     private float _gravityValue = -9.81f;
     private float _fallThreshold = 0.5f;
     private float _fallTimer = 0f;
-    public bool _isCustomizing = false;
+    [HideInInspector] public bool _isCustomizing = false;
+    [HideInInspector] public bool _isTakingSurvey = false;
     private bool _attackLeft = true;
 
 
@@ -101,14 +101,13 @@ public class PlayerController : PlayerStats
 
     void Start()
     {
-        // Cursor.lockState = CursorLockMode.Locked;
-
-       
-
+        Cursor.lockState = CursorLockMode.Locked;
     }
 
     void Update()
     {
+        if (_isCustomizing || _isTakingSurvey) return;
+
         
         PlayerGrounded = _controller.isGrounded;
 
@@ -195,7 +194,7 @@ public class PlayerController : PlayerStats
 
     void Jump()
     {
-        if (PlayerGrounded && !_isCustomizing)
+        if (PlayerGrounded && !(_isCustomizing || _isTakingSurvey) )
         {
             // Jump
             _footPlacementScript.EnableDynamicBodyPlacing = false;
@@ -288,11 +287,9 @@ public class PlayerController : PlayerStats
 
     public void Pause()
     {
-        if (_isCustomizing)
-        {
-            _isCustomizing = true;
-            enabled = false;
-        }
+        if (_isCustomizing || _isTakingSurvey) return;
+
+        //TODO: Add pause menu
     }
 
     
@@ -510,9 +507,12 @@ public class PlayerController : PlayerStats
 
     public void Inventory(InputAction.CallbackContext context)
     {
+        if (_isCustomizing || _isTakingSurvey) return;
+
         switch (context.phase)
         {
             case InputActionPhase.Started:
+
                 _showInventory.ToggleInventory();
                 break;
 
@@ -523,7 +523,6 @@ public class PlayerController : PlayerStats
                 break;
         }
     }
-
 }
 
 

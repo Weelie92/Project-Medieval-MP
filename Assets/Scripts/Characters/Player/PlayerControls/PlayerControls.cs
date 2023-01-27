@@ -384,6 +384,34 @@ public partial class @PlayerControls : IInputActionCollection2, IDisposable
                     ""isPartOfComposite"": false
                 }
             ]
+        },
+        {
+            ""name"": ""Survey"",
+            ""id"": ""5b02c463-6118-4d54-b521-e55b8bfafd41"",
+            ""actions"": [
+                {
+                    ""name"": ""Close"",
+                    ""type"": ""Button"",
+                    ""id"": ""caba7ce1-9c69-4463-b838-347bbef3946b"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                }
+            ],
+            ""bindings"": [
+                {
+                    ""name"": """",
+                    ""id"": ""238e813b-9096-431a-bd62-4d4f78982a7d"",
+                    ""path"": ""<Keyboard>/escape"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Close"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                }
+            ]
         }
     ],
     ""controlSchemes"": []
@@ -406,6 +434,9 @@ public partial class @PlayerControls : IInputActionCollection2, IDisposable
         m_Customize_Close = m_Customize.FindAction("Close", throwIfNotFound: true);
         m_Customize_Rotate = m_Customize.FindAction("Rotate", throwIfNotFound: true);
         m_Customize_MoveCamera = m_Customize.FindAction("MoveCamera", throwIfNotFound: true);
+        // Survey
+        m_Survey = asset.FindActionMap("Survey", throwIfNotFound: true);
+        m_Survey_Close = m_Survey.FindAction("Close", throwIfNotFound: true);
     }
 
     public void Dispose()
@@ -623,6 +654,39 @@ public partial class @PlayerControls : IInputActionCollection2, IDisposable
         }
     }
     public CustomizeActions @Customize => new CustomizeActions(this);
+
+    // Survey
+    private readonly InputActionMap m_Survey;
+    private ISurveyActions m_SurveyActionsCallbackInterface;
+    private readonly InputAction m_Survey_Close;
+    public struct SurveyActions
+    {
+        private @PlayerControls m_Wrapper;
+        public SurveyActions(@PlayerControls wrapper) { m_Wrapper = wrapper; }
+        public InputAction @Close => m_Wrapper.m_Survey_Close;
+        public InputActionMap Get() { return m_Wrapper.m_Survey; }
+        public void Enable() { Get().Enable(); }
+        public void Disable() { Get().Disable(); }
+        public bool enabled => Get().enabled;
+        public static implicit operator InputActionMap(SurveyActions set) { return set.Get(); }
+        public void SetCallbacks(ISurveyActions instance)
+        {
+            if (m_Wrapper.m_SurveyActionsCallbackInterface != null)
+            {
+                @Close.started -= m_Wrapper.m_SurveyActionsCallbackInterface.OnClose;
+                @Close.performed -= m_Wrapper.m_SurveyActionsCallbackInterface.OnClose;
+                @Close.canceled -= m_Wrapper.m_SurveyActionsCallbackInterface.OnClose;
+            }
+            m_Wrapper.m_SurveyActionsCallbackInterface = instance;
+            if (instance != null)
+            {
+                @Close.started += instance.OnClose;
+                @Close.performed += instance.OnClose;
+                @Close.canceled += instance.OnClose;
+            }
+        }
+    }
+    public SurveyActions @Survey => new SurveyActions(this);
     public interface ILandActions
     {
         void OnMove(InputAction.CallbackContext context);
@@ -642,5 +706,9 @@ public partial class @PlayerControls : IInputActionCollection2, IDisposable
         void OnClose(InputAction.CallbackContext context);
         void OnRotate(InputAction.CallbackContext context);
         void OnMoveCamera(InputAction.CallbackContext context);
+    }
+    public interface ISurveyActions
+    {
+        void OnClose(InputAction.CallbackContext context);
     }
 }

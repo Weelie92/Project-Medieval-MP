@@ -31,16 +31,14 @@ public class PlayerAiming : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-
-        //Cursor.visible = false;
-        //Cursor.lockState = CursorLockMode.Locked;
-
        _player = gameObject.GetComponent<PlayerController>();
     }
 
     // Update is called once per frame
     void Update()
     {
+        if (_player._isTakingSurvey || _player._isCustomizing) return;
+
         xAxis.Update(Time.deltaTime);
         yAxis.Update(Time.deltaTime);
         

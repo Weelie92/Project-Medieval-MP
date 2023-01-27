@@ -8,10 +8,14 @@ TagManager:
   - Collide
   - Customize
   - InventorySlot
-  - InventoryItem
   - Lootable
   - TopLayer
   - InventoryTextAmount
+  - Form
+  - InventoryItem
+  - PrototypeQuestUI
+  - Quest
+  - QuestManager
   layers:
   - Default
   - TransparentFX

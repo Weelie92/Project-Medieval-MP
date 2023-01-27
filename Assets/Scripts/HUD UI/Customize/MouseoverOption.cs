@@ -15,12 +15,16 @@ public class MouseoverOption : MonoBehaviour, IPointerEnterHandler, IPointerExit
 
     public void OnPointerEnter(PointerEventData eventData)
     {
+        if (playerCustomize._movingCamera) return;
+
         Debug.Log("Enter");
         playerCustomize.TempActivateItem(eventData.pointerEnter);
     }
 
     public void OnPointerExit(PointerEventData eventData)
     {
+        if (playerCustomize._movingCamera) return;
+
         Debug.Log("Exit");
         playerCustomize.TempActivateItem(null);
     }

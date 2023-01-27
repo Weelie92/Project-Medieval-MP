@@ -16,7 +16,7 @@ public class BuildInventory : MonoBehaviour
     
     
     public Image toolbarBG;
-    public Image inventoryBG;
+    public GameObject inventoryBG;
 
     private void Start()
     {
@@ -25,7 +25,7 @@ public class BuildInventory : MonoBehaviour
         // Build toolbar/Inventory
         for (int i = 0; i < _player.PlayerInventorySpace; i++)
         {
-            GameObject tempBG = Instantiate(inventorySlot);
+            GameObject tempSlot = Instantiate(inventorySlot);
             GameObject tempItem = Instantiate(inventoryItem);
             GameObject tempText = Instantiate(inventoryTextAmount);
 
@@ -33,21 +33,21 @@ public class BuildInventory : MonoBehaviour
 
             if (i < 10)
             {
-                tempBG.transform.SetParent(toolbarBG.transform);
-                tempItem.transform.SetParent(tempBG.transform);
+                tempSlot.transform.SetParent(toolbarBG.transform);
+                tempItem.transform.SetParent(tempSlot.transform);
                 tempText.transform.SetParent(tempItem.transform);
             }
             else
             {
-                tempBG.transform.SetParent(inventoryBG.transform);
-                tempItem.transform.SetParent(tempBG.transform);
+                tempSlot.transform.SetParent(inventoryBG.transform);
+                tempItem.transform.SetParent(tempSlot.transform);
                 tempText.transform.SetParent(tempItem.transform);
             }
             // change tempText textMeshPro to 0
             tempText.GetComponent<TextMeshProUGUI>().text = "";
             tempText.transform.position = new Vector3(5, 10, 0);
 
-            inventoryItemList.slots[i] = tempBG;
+            inventoryItemList.slots[i] = tempSlot;
             inventoryItemList.items[i] = tempItem;
         }
     }

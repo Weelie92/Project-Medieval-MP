@@ -5,26 +5,30 @@ using UnityEngine.UI;
 
 public class ShowInventory : MonoBehaviour
 {
-    public Image mainInventory;
+    public GameObject mainInventory;
+    public GameObject toolbar;
+    
+    public Image blackBackground;
 
-    private bool _showInventory = true;
-
-
-    // Start is called before the first frame update
-    void Start()
-    {
-
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
+    public bool showInventory = false;
 
     public void ToggleInventory()
     {
-        mainInventory.gameObject.SetActive(_showInventory);
-        _showInventory = !_showInventory;
+        showInventory = !showInventory;
+
+        if (showInventory)
+        {
+            Cursor.lockState = CursorLockMode.Confined;
+        }
+        else
+        {
+            Cursor.lockState = CursorLockMode.Locked;
+        }
+
+        gameObject.GetComponent<PlayerAiming>().enabled = !showInventory;
+
+        mainInventory.SetActive(showInventory);
+        blackBackground.gameObject.SetActive(showInventory);
+        
     }
 }

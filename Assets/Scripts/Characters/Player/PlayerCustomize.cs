@@ -7,22 +7,23 @@ using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 using UnityEngine.PlayerLoop;
 using UnityEngine.UIElements;
-using UnityEditor.UIElements;
 using static Cinemachine.AxisState;
 using Cursor = UnityEngine.Cursor;
 
 public class PlayerCustomize : MonoBehaviour
 {
     private GameObject _player;
+    private ShowInventory _showInventory;
     private Animator _playerAnimator;
     private PlayerControls _playerControls;
     private CinemachineVirtualCamera _vcam;
     private Cinemachine3rdPersonFollow _vcamFollow;
-    private PlayerAiming _playerAiming;
+    private PlayerAiming _playerAiming; 
     public GameObject _tempObject = null;
     private Transform[] _allChildObjects;
 
     public Canvas customizeCanvas;
+    public Canvas inventoryToolbar;
 
     public Transform _lookAt;
     [SerializeField] private Cinemachine.AxisState xAxis;
@@ -33,7 +34,7 @@ public class PlayerCustomize : MonoBehaviour
 
     private Quaternion _targetRotation;
     private bool _cameraMoving = false;
-    private bool _movingCamera = false;
+    [HideInInspector] public bool _movingCamera = false;
 
     [Header("Material")]
     public Material mat;
@@ -70,6 +71,7 @@ public class PlayerCustomize : MonoBehaviour
     void Awake()
     {
         _player = GameObject.Find("Player");
+        _showInventory = gameObject.GetComponent<ShowInventory>();
         _playerControls = new PlayerControls();
         _playerAiming = GetComponent<PlayerAiming>();
         _playerAnimator = GetComponent<Animator>();
@@ -126,12 +128,26 @@ public class PlayerCustomize : MonoBehaviour
 
     public void Initialize(Vector3 position)
     {
+        if (_showInventory.showInventory)
+        {
+            gameObject.GetComponent<PlayerCustomize>().enabled = false;
+            return;
+        }
+
+        inventoryToolbar.gameObject.SetActive(false);
+
+        Cursor.lockState = CursorLockMode.None;
+
+
+
         _vcamFollow = _vcam.GetCinemachineComponent<Cinemachine3rdPersonFollow>();
         _player.GetComponent<PlayerController>()._isCustomizing = true;
         _player.GetComponent<PlayerController>().enabled = false;
         _player.GetComponent<HeadLookAtDirection>().enabled = false;
         _player.GetComponent<PlayerAiming>().enabled = false;
         _player.GetComponent<CheckInteraction>().enabled = false;
+        
+        _player.GetComponent<ShowInventory>().toolbar.SetActive(false);
 
 
         _playerAnimator.SetBool("isMoving", false);
@@ -150,6 +166,7 @@ public class PlayerCustomize : MonoBehaviour
         _cameraMoving = true;
 
         customizeCanvas.gameObject.SetActive(true);
+        
 
         Invoke(nameof(CameraStop), 1f);
 
@@ -505,7 +522,15 @@ public class PlayerCustomize : MonoBehaviour
 
     public void SaveCustomization()
     {
+        GameObject.Find("Quest").GetComponent<PrototypeQuest>().QuestObjectiveUpdate(2, 0); // QUEST
         _player.GetComponent<PlayerController>()._isCustomizing = false;
+        _player.GetComponent<ShowInventory>().toolbar.SetActive(true);
+        inventoryToolbar.gameObject.SetActive(true);
+
+        Cursor.lockState = CursorLockMode.Locked;
+
+        customizeCanvas.gameObject.SetActive(false);
+
         Invoke(nameof(Disable), 1f);
     }
 
@@ -517,12 +542,25 @@ public class PlayerCustomize : MonoBehaviour
 
     public void Close(InputAction.CallbackContext context)
     {
+        if (!gameObject.GetComponent<PlayerController>()._isCustomizing) return;
+
+        
+        Cursor.lockState = CursorLockMode.Locked;
+
+        GameObject.Find("Quest").GetComponent<PrototypeQuest>().QuestObjectiveUpdate(0, 0); // QUEST
+
         if (_player == null) return;
         
         switch (context.phase)
         {
             case InputActionPhase.Started:
+                
                 _player.GetComponent<PlayerController>()._isCustomizing = false;
+                _player.GetComponent<ShowInventory>().toolbar.SetActive(true);
+                
+                inventoryToolbar.gameObject.SetActive(true);
+                customizeCanvas.gameObject.SetActive(false);
+
                 Invoke(nameof(Disable), 1f);
                 break;
         }
@@ -530,17 +568,17 @@ public class PlayerCustomize : MonoBehaviour
 
     public void MoveCamera(InputAction.CallbackContext context)
     {
-        if (_player == null || EventSystem.current.IsPointerOverGameObject()) return;
+        if (_player == null || !gameObject.GetComponent<PlayerController>()._isCustomizing) return;
         
         switch (context.phase)
         {
             case InputActionPhase.Started:
                 _movingCamera = true;
-                Cursor.lockState = CursorLockMode.Locked;
+                Cursor.lockState = CursorLockMode.Confined;
                 break;
             case InputActionPhase.Canceled:
-                _movingCamera = false;
                 Cursor.lockState = CursorLockMode.None;
+                _movingCamera = false;
                 break;
         }
     }
@@ -551,9 +589,14 @@ public class PlayerCustomize : MonoBehaviour
         _player.GetComponent<HeadLookAtDirection>().enabled = true;
         _player.GetComponent<PlayerAiming>().enabled = true;
         _player.GetComponent<CheckInteraction>().enabled = true;
+
+
+        customizeCanvas.gameObject.SetActive(false);
+
+
         _player.GetComponent<PlayerAiming>().xAxis.Value = 0;
         _player.GetComponent<PlayerAiming>().yAxis.Value = 0;
-        customizeCanvas.gameObject.SetActive(false);
+
         enabled = false;
     }
 }

@@ -21,7 +21,7 @@ public abstract class PlayerStats : MonoBehaviour
     [HideInInspector] public float NextAttackTime;
     [HideInInspector] public bool PlayerMoving = false;
     [HideInInspector] public bool PlayerRunning = false;
-    public bool PlayerGrounded = true;
+    [HideInInspector] public bool PlayerGrounded = true;
     [HideInInspector] public bool PlayerOffhanding = false;
     [HideInInspector] public bool PlayerAttacking = false;
     [HideInInspector] public float PlayerStaminaRegen;

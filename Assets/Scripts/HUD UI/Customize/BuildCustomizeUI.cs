@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using TMPro;
 using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 public class BuildCustomizeUI : MonoBehaviour
@@ -14,8 +15,6 @@ public class BuildCustomizeUI : MonoBehaviour
     public Button eyebrow;
     public Button facialHair;
     public Button accept;
-
-    public Toggle elf_Ear;
 
     public Canvas options;
 
@@ -40,11 +39,15 @@ public class BuildCustomizeUI : MonoBehaviour
 
     private bool isMale = true;
 
-
+    private TMP_Dropdown _headDropdown;
 
     private void Start()
     {
+        // Head dropdown
+        //_headDropdown = transform.Find("HeadDropdown").GetComponent<TMP_Dropdown>();
+
         
+
         maleButton.onClick.AddListener(() => { OnClickMaleButton(); });
 
         femaleButton.onClick.AddListener(() => { OnClickFemaleButton(); });
@@ -59,7 +62,6 @@ public class BuildCustomizeUI : MonoBehaviour
 
         accept.onClick.AddListener(() => { OnClickAccept(); });
 
-        elf_Ear.onValueChanged.AddListener((bool value) => { OnClickElf_Ear(value); });
 
         SkincolorShow();
         HaircolorShow();
@@ -69,12 +71,17 @@ public class BuildCustomizeUI : MonoBehaviour
         gameObject.SetActive(false);
     }
 
+   
     void OnClickMaleButton()
     {
         if (isMale)
             return;
 
-        facialHair.gameObject.SetActive(true);
+        GameObject.Find("Quest").GetComponent<PrototypeQuest>().QuestObjectiveUpdate(1, 0); // QUEST
+        //facialHair.gameObject.SetActive(true);
+        facialHair.transform.GetChild(0).gameObject.SetActive(true);
+        facialHair.GetComponent<Image>().enabled = true;
+        facialHair.GetComponent<Button>().interactable = true;
         isMale = true;
         playerCustomize.isMale = true;
         DestroyChildren();
@@ -87,7 +94,11 @@ public class BuildCustomizeUI : MonoBehaviour
         if (!isMale)
             return;
 
-        facialHair.gameObject.SetActive(false);
+        GameObject.Find("Quest").GetComponent<PrototypeQuest>().QuestObjectiveUpdate(1, 1); // QUEST
+        //facialHair.gameObject.SetActive(false);
+        facialHair.transform.GetChild(0).gameObject.SetActive(false);
+        facialHair.GetComponent<Image>().enabled = false;
+        facialHair.GetComponent<Button>().interactable = false;
         isMale = false;
         playerCustomize.isMale = false;
         DestroyChildren();
@@ -155,6 +166,8 @@ public class BuildCustomizeUI : MonoBehaviour
 
     void OnClickEyebrow()
     {
+        gameObject.GetComponent<ProtoTypeQuestPing>().PING(2);
+
         int counter = 1;
 
         DestroyChildren();

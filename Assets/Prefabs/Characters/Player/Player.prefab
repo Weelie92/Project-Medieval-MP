@@ -53848,6 +53848,7 @@ GameObject:
   - component: {fileID: 4038130276060905900}
   - component: {fileID: 770273686272398236}
   - component: {fileID: 1912751673005490716}
+  - component: {fileID: 655007006}
   m_Layer: 10
   m_Name: Player
   m_TagString: Player
@@ -54068,6 +54069,7 @@ MonoBehaviour:
   PlayerWalkSpeed: 2
   PlayerJumpForce: 5
   PlayerRunSpeed: 0
+  PlayerInventorySpace: 30
   NextAttackTime: 0
   PlayerMoving: 0
   PlayerRunning: 0
@@ -54075,6 +54077,10 @@ MonoBehaviour:
   PlayerOffhanding: 0
   PlayerAttacking: 0
   PlayerStaminaRegen: 0
+  PlayerWeapon: Unarmed
+  inventoryItemList: {fileID: 11400000, guid: 8189bb2373fef6147896c0b69b8e8118, type: 2}
+  itemPrefabList: {fileID: 11400000, guid: a2200b164cbfc1a47a6eecd096e65f31, type: 2}
+  _isCustomizing: 0
 --- !u!114 &6083815690339893146
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -54133,7 +54139,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6083143964201592434}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: ad159c285c6e6ae4caa1641e7eff37c6, type: 3}
   m_Name: 
@@ -54350,11 +54356,189 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6083143964201592434}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 450355bea893f284ca00d95a55cb8d74, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _tempObject: {fileID: 0}
+  customizeCanvas: {fileID: 0}
+  _lookAt: {fileID: 0}
+  xAxis:
+    Value: 0
+    m_SpeedMode: 1
+    m_MaxSpeed: 0.1
+    m_AccelTime: 0.02
+    m_DecelTime: 0.02
+    m_InputAxisName: 
+    m_InputAxisValue: 0
+    m_InvertInput: 0
+    m_MinValue: -180
+    m_MaxValue: 180
+    m_Wrap: 1
+    m_Recentering:
+      m_enabled: 0
+      m_WaitTime: 0
+      m_RecenteringTime: 0
+      m_LegacyHeadingDefinition: 0
+      m_LegacyVelocityFilterStrength: 0
+  yAxis:
+    Value: 0
+    m_SpeedMode: 1
+    m_MaxSpeed: 0.1
+    m_AccelTime: 0.02
+    m_DecelTime: 0.02
+    m_InputAxisName: 
+    m_InputAxisValue: 0
+    m_InvertInput: 1
+    m_MinValue: -75
+    m_MaxValue: 75
+    m_Wrap: 0
+    m_Recentering:
+      m_enabled: 0
+      m_WaitTime: 0
+      m_RecenteringTime: 0
+      m_LegacyHeadingDefinition: 0
+      m_LegacyVelocityFilterStrength: 0
+  isMale: 1
+  mat: {fileID: 2100000, guid: ea128b040f8b0af4c9d2de400aaff30a, type: 2}
+  colorGearPrimary:
+  - {r: 0.2862745, g: 0.4, b: 0.4941177, a: 1}
+  - {r: 0.4392157, g: 0.1960784, b: 0.172549, a: 1}
+  - {r: 0.3529412, g: 0.3803922, b: 0.2705882, a: 1}
+  - {r: 0.682353, g: 0.4392157, b: 0.2196079, a: 1}
+  - {r: 0.4313726, g: 0.2313726, b: 0.2705882, a: 1}
+  - {r: 0.5921569, g: 0.4941177, b: 0.2588235, a: 1}
+  - {r: 0.482353, g: 0.4156863, b: 0.3529412, a: 1}
+  - {r: 0.2352941, g: 0.2352941, b: 0.2352941, a: 1}
+  - {r: 0.2313726, g: 0.4313726, b: 0.4156863, a: 1}
+  colorGearSecondary:
+  - {r: 0.7019608, g: 0.6235294, b: 0.4666667, a: 1}
+  - {r: 0.7372549, g: 0.7372549, b: 0.7372549, a: 1}
+  - {r: 0.1647059, g: 0.1647059, b: 0.1647059, a: 1}
+  - {r: 0.2392157, g: 0.2509804, b: 0.1882353, a: 1}
+  colorMetalPrimary:
+  - {r: 0.6705883, g: 0.6705883, b: 0.6705883, a: 1}
+  - {r: 0.5568628, g: 0.5960785, b: 0.6392157, a: 1}
+  - {r: 0.5568628, g: 0.6235294, b: 0.6, a: 1}
+  - {r: 0.6313726, g: 0.6196079, b: 0.5568628, a: 1}
+  - {r: 0.6980392, g: 0.6509804, b: 0.6196079, a: 1}
+  colorMetalSeconday:
+  - {r: 0.3921569, g: 0.4039216, b: 0.4117647, a: 1}
+  - {r: 0.4784314, g: 0.5176471, b: 0.5450981, a: 1}
+  - {r: 0.3764706, g: 0.3607843, b: 0.3372549, a: 1}
+  - {r: 0.3254902, g: 0.3764706, b: 0.3372549, a: 1}
+  - {r: 0.4, g: 0.4039216, b: 0.3568628, a: 1}
+  colorLeatherPrimary: []
+  colorLeatherSecondary: []
+  colorSkin:
+  - {r: 1, g: 0.9407531, b: 0.8537736, a: 1}
+  - {r: 1, g: 0.85882354, b: 0.6745098, a: 1}
+  - {r: 1, g: 0.7851784, b: 0.504717, a: 1}
+  - {r: 0.8784314, g: 0.6745098, b: 0.4117647, a: 1}
+  - {r: 0.7764706, g: 0.5254902, b: 0.25882354, a: 1}
+  - {r: 0.5529412, g: 0.33333334, b: 0.14117648, a: 1}
+  - {r: 0.3882353, g: 0.23529412, b: 0.09803922, a: 1}
+  - {r: 0.2784314, g: 0.16862746, b: 0.07058824, a: 1}
+  colorHair:
+  - {r: 0.8000001, g: 0.8196079, b: 0.8078432, a: 1}
+  - {r: 0.6196079, g: 0.6196079, b: 0.6196079, a: 1}
+  - {r: 0.8901961, g: 0.7803922, b: 0.5490196, a: 1}
+  - {r: 0.8313726, g: 0.6235294, b: 0.3607843, a: 1}
+  - {r: 0.5450981, g: 0.427451, b: 0.2156863, a: 1}
+  - {r: 0.6862745, g: 0.4, b: 0.2352941, a: 1}
+  - {r: 1, g: 0.48381883, b: 0, a: 1}
+  - {r: 0.5943396, g: 0.16516544, b: 0, a: 1}
+  - {r: 0.3098039, g: 0.254902, b: 0.1764706, a: 1}
+  - {r: 0.3843138, g: 0.2352941, b: 0.0509804, a: 1}
+  - {r: 0.254717, g: 0.254717, b: 0.254717, a: 1}
+  - {r: 0, g: 0, b: 0, a: 1}
+  colorEyes:
+  - {r: 0.8584906, g: 0.8584906, b: 0.8584906, a: 1}
+  - {r: 0.7216981, g: 0.7864422, b: 1, a: 1}
+  - {r: 0.504717, g: 0.75106406, b: 1, a: 1}
+  - {r: 0.4245283, g: 0.26287878, b: 0, a: 1}
+  - {r: 0.254717, g: 0.090673104, b: 0, a: 1}
+  - {r: 0.43543077, g: 0.9716981, b: 0.7419903, a: 1}
+  - {r: 0.4764151, g: 1, b: 0.48035756, a: 1}
+  - {r: 0, g: 0, b: 0, a: 1}
+  colorScar:
+  - {r: 0.9294118, g: 0.6862745, b: 0.5921569, a: 1}
+  - {r: 0.69803923, g: 0.54509807, b: 0.40000004, a: 1}
+  - {r: 0.42352945, g: 0.31764707, b: 0.28235295, a: 1}
+  - {r: 0.8745099, g: 0.65882355, b: 0.6313726, a: 1}
+  colorBodyArt:
+  - {r: 0.0509804, g: 0.6745098, b: 0.9843138, a: 1}
+  - {r: 0.7215686, g: 0.2666667, b: 0.2666667, a: 1}
+  - {r: 0.3058824, g: 0.7215686, b: 0.6862745, a: 1}
+  - {r: 0.9254903, g: 0.882353, b: 0.8509805, a: 1}
+  - {r: 0.3098039, g: 0.7058824, b: 0.3137255, a: 1}
+  - {r: 0.5294118, g: 0.3098039, b: 0.6470588, a: 1}
+  - {r: 0.8666667, g: 0.7764707, b: 0.254902, a: 1}
+  - {r: 0.2392157, g: 0.4588236, b: 0.8156863, a: 1}
+  enabledObjects: []
+  male:
+    headAllElements: []
+    headNoElements: []
+    eyebrow: []
+    facialHair: []
+    torso: []
+    arm_Upper_Right: []
+    arm_Upper_Left: []
+    arm_Lower_Right: []
+    arm_Lower_Left: []
+    hand_Right: []
+    hand_Left: []
+    hips: []
+    leg_Right: []
+    leg_Left: []
+  female:
+    headAllElements: []
+    headNoElements: []
+    eyebrow: []
+    facialHair: []
+    torso: []
+    arm_Upper_Right: []
+    arm_Upper_Left: []
+    arm_Lower_Right: []
+    arm_Lower_Left: []
+    hand_Right: []
+    hand_Left: []
+    hips: []
+    leg_Right: []
+    leg_Left: []
+  allGender:
+    headCoverings_Base_Hair: []
+    headCoverings_No_FacialHair: []
+    headCoverings_No_Hair: []
+    all_Hair: []
+    all_Head_Attachment: []
+    chest_Attachment: []
+    back_Attachment: []
+    shoulder_Attachment_Right: []
+    shoulder_Attachment_Left: []
+    elbow_Attachment_Right: []
+    elbow_Attachment_Left: []
+    hips_Attachment: []
+    knee_Attachement_Right: []
+    knee_Attachement_Left: []
+    all_12_Extra: []
+    elf_Ear: []
+  ColorTargets: []
+--- !u!114 &655007006
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6083143964201592434}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6022d9bc25df79a4299fe2071bdba4b2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  mainInventory: {fileID: 0}
+  blackBackground: {fileID: 0}
 --- !u!1 &6083146129099047136
 GameObject:
   m_ObjectHideFlags: 0
@@ -69734,8 +69918,8 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6083815691402949495}
-  m_LocalRotation: {x: -0.051800378, y: 0.29851362, z: -0.016228065, w: -0.9528605}
-  m_LocalPosition: {x: -1, y: 1.65, z: 3}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 1.2349999, y: 0.83699995, z: 3}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:

@@ -36,16 +36,16 @@ public class InventoryItem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEn
         _inventoryTextAmount = transform.GetChild(0).GetComponent<TextMeshProUGUI>();
         _inventoryTextAmount.transform.position = new Vector3(5, 10, 0);
 
-        Debug.Log(_inventoryTextAmount);
     }
 
     
     public void OnBeginDrag(PointerEventData eventData)
     {
         if (itemName == "Empty") return;
-        
-        
+
+
         image.raycastTarget = false;
+        _inventoryTextAmount.raycastTarget = false;
         oldParent = transform.parent.gameObject;
         transform.SetParent(GameObject.FindGameObjectWithTag("TopLayer").transform);
         
@@ -55,32 +55,36 @@ public class InventoryItem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEn
     
     public void OnDrag(PointerEventData eventData)
     {
-        if (itemName == "Empty") return;
-        
+
         if (!eventData.pointerCurrentRaycast.gameObject)
         {
             transform.position = Input.mousePosition;
             return;
         }
 
-        transform.position = Input.mousePosition;
 
+
+        transform.position = Input.mousePosition;
         // New switch state
         currentSlot = eventData.pointerCurrentRaycast.gameObject.tag switch
         {
             "InventorySlot" => eventData.pointerCurrentRaycast.gameObject,
             "InventoryItem" => eventData.pointerCurrentRaycast.gameObject.transform.parent.gameObject,
+            "InventoryTextAmount" => eventData.pointerCurrentRaycast.gameObject.transform.parent.parent.gameObject,
             _ => null,
         };
+
+        Debug.Log(eventData.pointerCurrentRaycast.gameObject.transform.parent.name);
     }
 
     public void OnEndDrag(PointerEventData eventData)
     {
-        if (itemName == "Empty") return;
-        
+
+
         image.raycastTarget = true;
-        
-        
+        _inventoryTextAmount.raycastTarget = true;
+
+
         if (currentSlot)
         {
             transform.SetParent(currentSlot.transform);
