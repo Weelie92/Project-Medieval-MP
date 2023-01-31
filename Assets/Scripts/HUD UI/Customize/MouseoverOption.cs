@@ -10,22 +10,22 @@ public class MouseoverOption : MonoBehaviour, IPointerEnterHandler, IPointerExit
 
     private void Start()
     {
-        playerCustomize = GameObject.Find("Player").GetComponent<PlayerCustomize>();
+        //playerCustomize = GameObject.Find("Player").GetComponent<PlayerCustomize>();
     }
 
     public void OnPointerEnter(PointerEventData eventData)
     {
-        if (playerCustomize._movingCamera) return;
-
-        Debug.Log("Enter");
+        //if (playerCustomize._movingCamera) return;
+        //if (GameObject.Find("Player").GetComponent<PlayerCustomize>()._movingCamera) return;
+            
         playerCustomize.TempActivateItem(eventData.pointerEnter);
     }
 
     public void OnPointerExit(PointerEventData eventData)
     {
-        if (playerCustomize._movingCamera) return;
+        //if (playerCustomize._movingCamera) return;
+        //if (GameObject.Find("Player").GetComponent<PlayerCustomize>()._movingCamera) return;
 
-        Debug.Log("Exit");
         playerCustomize.TempActivateItem(null);
     }
 

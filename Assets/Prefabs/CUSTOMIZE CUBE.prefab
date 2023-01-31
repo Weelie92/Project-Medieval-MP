@@ -111,10 +111,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 494bbe0f6c9157540a23df4299d3d270, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  lookAtRotation: {x: 0, y: 0, z: 0}
+  isInteractable: 1
+  lookAtRotation: {x: 0.54, y: 0, z: 0}
   _interactE: {fileID: 0}
   showInteractE: 0
-  _player: {fileID: 0}
+  formSurvey: {fileID: 0}
+  newSurveyHeader: 
+  URL: 
 --- !u!1001 &2893819174213408845
 PrefabInstance:
   m_ObjectHideFlags: 0

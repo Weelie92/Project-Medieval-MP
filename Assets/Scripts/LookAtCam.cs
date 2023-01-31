@@ -6,15 +6,36 @@ public class LookAtCam : MonoBehaviour
 {
     private Camera _cameraToLookAt;
 
+    [SerializeField] Collider[] colliders;
+
     private void Start()
     {
-        _cameraToLookAt = Camera.main;
+        GetComponent<Canvas>().enabled = false;
     }
-
 
     void Update()
     {
-        transform.LookAt(_cameraToLookAt.transform.position);
-        transform.Rotate(0, 180, 0);
+        colliders = Physics.OverlapSphere(transform.position, 3f, LayerMask.GetMask("Player"));
+
+        if (colliders.Length > 0)
+        {
+            foreach (Collider collider in colliders)
+            {
+                if (collider.gameObject.tag == "Player")
+                {
+                    GetComponent<Canvas>().enabled = true;
+                    _cameraToLookAt = collider.gameObject.GetComponentInChildren<Camera>();
+                }
+            }
+
+            if (_cameraToLookAt == null) return;
+
+            transform.LookAt(_cameraToLookAt.transform.position);
+            transform.Rotate(0, 180, 0);
+        }
+        else
+        {
+            GetComponent<Canvas>().enabled = false;
+        }
     }
 }

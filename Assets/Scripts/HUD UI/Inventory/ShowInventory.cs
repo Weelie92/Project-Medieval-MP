@@ -5,30 +5,47 @@ using UnityEngine.UI;
 
 public class ShowInventory : MonoBehaviour
 {
-    public GameObject mainInventory;
-    public GameObject toolbar;
+    public GameObject UI_Inventory_Main;
+    public GameObject UI_Inventory_Toolbar;
     
-    public Image blackBackground;
+    public GameObject UI_Inventory_BG;
 
-    public bool showInventory = false;
+    private PlayerController _playerController;
+
+    
+    private void Start()
+    {
+        _playerController = gameObject.GetComponent<PlayerController>();
+
+        GameObject mainUI = GameObject.Find("UI_Inventory");
+
+        UI_Inventory_Main = mainUI.transform.Find("UI_Inventory_Main").gameObject;
+        UI_Inventory_Toolbar = mainUI.transform.Find("UI_Inventory_Toolbar").gameObject;
+        UI_Inventory_BG = mainUI.transform.Find("UI_Inventory_BG").gameObject;
+
+
+        UI_Inventory_Main.SetActive(_playerController.isInventoryOpen);
+        UI_Inventory_BG.gameObject.SetActive(_playerController.isInventoryOpen);
+    }
 
     public void ToggleInventory()
     {
-        showInventory = !showInventory;
+        _playerController.isInventoryOpen = !_playerController.isInventoryOpen;
 
-        if (showInventory)
+        if (_playerController.isInventoryOpen)
         {
-            Cursor.lockState = CursorLockMode.Confined;
+            GameObject.Find("QuestInventory").GetComponent<PrototypeQuest>().QuestObjectiveUpdate(0, 0); // QUEST: Test Inventory - Open/Close inventory
+            Cursor.lockState = CursorLockMode.None;
         }
         else
         {
+            GameObject.Find("QuestInventory").GetComponent<PrototypeQuest>().QuestObjectiveUpdate(0, 1); // QUEST: Test Inventory - Open/Close inventory
             Cursor.lockState = CursorLockMode.Locked;
         }
 
-        gameObject.GetComponent<PlayerAiming>().enabled = !showInventory;
 
-        mainInventory.SetActive(showInventory);
-        blackBackground.gameObject.SetActive(showInventory);
+        UI_Inventory_Main.SetActive(_playerController.isInventoryOpen);
+        UI_Inventory_BG.gameObject.SetActive(_playerController.isInventoryOpen);
         
     }
 }

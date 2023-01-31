@@ -11,32 +11,45 @@ public class Interactable : MonoBehaviour
     public Canvas _interactE;
     public bool showInteractE = false;
 
-    public GameObject player;
-
     [Header("Survey")]
     public GameObject formSurvey;
     public string newSurveyHeader;
     public string URL;
+
+    [Header("Customize")]
+    [SerializeField] private Vector3 _cameraPositionWhenCustomizing;
+    [SerializeField] private Vector3 _playerPositionWhenCustomizing;
+    [SerializeField] private float _playerRotationWhenCustomizing;
+    [SerializeField] private GameObject _UI_Customize;
 
 
     private void Start()
     {
         _interactE = GetComponentInChildren<Canvas>();
         _interactE.enabled = showInteractE;
-
-        player = GameObject.FindGameObjectWithTag("Player");
     }
 
-    public void Interact()
+    public void Interact(GameObject player)
     {
         switch (gameObject.tag)
         {
             case "Door":
                 break;
             case "Customize":
-                GameObject.Find("Quest").GetComponent<PrototypeQuest>().QuestObjectiveUpdate(0, 1); // QUEST
-                player.GetComponent<PlayerCustomize>().enabled = true;
-                player.GetComponent<PlayerCustomize>().Initialize(lookAtRotation);
+                GameObject.Find("QuestCustomize").GetComponent<PrototypeQuest>().QuestObjectiveUpdate(0, 0); // QUEST: Test Customization - Open/Close customization
+
+                PlayerCustomize playerCustomize = player.GetComponent<PlayerCustomize>();
+
+                _UI_Customize.GetComponent<Canvas>().enabled = true;
+                _UI_Customize.GetComponent<CustomizeUI>().playerCustomize = playerCustomize;
+                _UI_Customize.GetComponent<CustomizeUI>().Initialize();
+
+                playerCustomize.enabled = true;
+                playerCustomize.cameraPositionWhenCustomizing = _cameraPositionWhenCustomizing;
+                playerCustomize.playerPositionWhenCustomizing = _playerPositionWhenCustomizing;
+                playerCustomize.playerRotationWhenCustomizing = _playerRotationWhenCustomizing;
+                playerCustomize.Initialize();
+                player.GetComponent<PlayerController>().isCustomizing = true;
                 break;
             case "Lootable":
                 _interactE.enabled = false;
@@ -48,11 +61,10 @@ public class Interactable : MonoBehaviour
                 if (!isInteractable) return;
 
                 isInteractable = false;
-
-                player.GetComponent<PlayerController>()._isTakingSurvey = true;
                 
                 formSurvey.SetActive(true);
-                formSurvey.GetComponent<FormBuilder>().Initialize(URL, newSurveyHeader);                
+                formSurvey.GetComponent<SurveyUI>().Initialize(URL, newSurveyHeader);
+                
                 break;
             default:
                 break;

@@ -55,6 +55,7 @@ public class InventoryItem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEn
     
     public void OnDrag(PointerEventData eventData)
     {
+        if (itemName == "Empty") return;
 
         if (!eventData.pointerCurrentRaycast.gameObject)
         {
@@ -74,7 +75,6 @@ public class InventoryItem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEn
             _ => null,
         };
 
-        Debug.Log(eventData.pointerCurrentRaycast.gameObject.transform.parent.name);
     }
 
     public void OnEndDrag(PointerEventData eventData)
@@ -87,6 +87,8 @@ public class InventoryItem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEn
 
         if (currentSlot)
         {
+            GameObject.Find("QuestInventory").GetComponent<PrototypeQuest>().QuestObjectiveUpdate(2, 0); // QUEST: Test Inventory - Move something
+            
             transform.SetParent(currentSlot.transform);
             transform.position = currentSlot.transform.position;
             currentSlot.GetComponentInChildren<InventoryItem>().ChangeParentSlot(oldParent.transform);

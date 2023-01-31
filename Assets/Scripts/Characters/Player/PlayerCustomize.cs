@@ -1,7 +1,9 @@
 using System.Collections;
 using System.Collections.Generic;
+using UnityEngine.Networking;
 using Cinemachine;
 using PsychoticLab;
+using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
@@ -10,72 +12,66 @@ using UnityEngine.UIElements;
 using static Cinemachine.AxisState;
 using Cursor = UnityEngine.Cursor;
 
-public class PlayerCustomize : MonoBehaviour
+public class PlayerCustomize : NetworkBehaviour
 {
-    private GameObject _player;
+
+
+    [SerializeField] private GameObject _player;
+    [SerializeField] private PlayerController _playerController;
+    [SerializeField] private PlayerAiming _playerAiming;
+
+    [Header("Variables")]
+    [SerializeField] private float _cameraDistance = 3f;
     private ShowInventory _showInventory;
     private Animator _playerAnimator;
     private PlayerControls _playerControls;
     private CinemachineVirtualCamera _vcam;
-    private Cinemachine3rdPersonFollow _vcamFollow;
-    private PlayerAiming _playerAiming; 
     public GameObject _tempObject = null;
-    private Transform[] _allChildObjects;
+    
+    public Transform[] _allChildObjects;
+    public ScriptableObject _allPlayerModules;
 
-    public Canvas customizeCanvas;
-    public Canvas inventoryToolbar;
+    public int[] _allChildObjectsIndex;
+
+    public GameObject UI_Customize;
+    public GameObject UI_Inventory;
 
     public Transform _lookAt;
-    [SerializeField] private Cinemachine.AxisState xAxis;
-    [SerializeField] private Cinemachine.AxisState yAxis;
-    private Cinemachine.CinemachineInputProvider inputAxisProvider;
+
+    [HideInInspector] public Vector3 cameraPositionWhenCustomizing;
+    [HideInInspector] public Vector3 playerPositionWhenCustomizing;
+    [HideInInspector] public float playerRotationWhenCustomizing;
+
+
 
     public bool isMale = true;
 
-    private Quaternion _targetRotation;
-    private bool _cameraMoving = false;
-    [HideInInspector] public bool _movingCamera = false;
+
 
     [Header("Material")]
     public Material mat;
 
-    [Header("Gear Colors")]
-    public Color[] colorGearPrimary = { new Color(0.2862745f, 0.4f, 0.4941177f), new Color(0.4392157f, 0.1960784f, 0.172549f), new Color(0.3529412f, 0.3803922f, 0.2705882f), new Color(0.682353f, 0.4392157f, 0.2196079f), new Color(0.4313726f, 0.2313726f, 0.2705882f), new Color(0.5921569f, 0.4941177f, 0.2588235f), new Color(0.482353f, 0.4156863f, 0.3529412f), new Color(0.2352941f, 0.2352941f, 0.2352941f), new Color(0.2313726f, 0.4313726f, 0.4156863f) };
-    public Color[] colorGearSecondary = { new Color(0.7019608f, 0.6235294f, 0.4666667f), new Color(0.7372549f, 0.7372549f, 0.7372549f), new Color(0.1647059f, 0.1647059f, 0.1647059f), new Color(0.2392157f, 0.2509804f, 0.1882353f) };
-
-    [Header("Metal Colors")]
-    public Color[] colorMetalPrimary = { new Color(0.6705883f, 0.6705883f, 0.6705883f), new Color(0.5568628f, 0.5960785f, 0.6392157f), new Color(0.5568628f, 0.6235294f, 0.6f), new Color(0.6313726f, 0.6196079f, 0.5568628f), new Color(0.6980392f, 0.6509804f, 0.6196079f) };
-    public Color[] colorMetalSeconday = { new Color(0.3921569f, 0.4039216f, 0.4117647f), new Color(0.4784314f, 0.5176471f, 0.5450981f), new Color(0.3764706f, 0.3607843f, 0.3372549f), new Color(0.3254902f, 0.3764706f, 0.3372549f), new Color(0.4f, 0.4039216f, 0.3568628f) };
-
-    [Header("Leather Colors")]
-    public Color[] colorLeatherPrimary;
-    public Color[] colorLeatherSecondary;
-
-    [Header("Skin Colors")]
-    public Color[] colorSkin = { new Color(1.00000f, 0.87843f, 0.74118f), new Color(1f, 0.8000001f, 0.682353f), new Color(1f, 0.80392f, 0.58039f), new Color(0.87843f, 0.68235f, 0.41176f), new Color(0.8196079f, 0.6352941f, 0.4588236f), new Color(0.5647059f, 0.4078432f, 0.3137255f), new Color(0.55294f, 0.33333f, 0.14118f), new Color(0.43529f, 0.30980f, 0.11373f) };
-
-    [Header("Hair Colors")]
-    public Color[] colorHair = { new Color(0.3098039f, 0.254902f, 0.1764706f), new Color(0.2196079f, 0.2196079f, 0.2196079f), new Color(0.8313726f, 0.6235294f, 0.3607843f), new Color(0.8901961f, 0.7803922f, 0.5490196f), new Color(0.8000001f, 0.8196079f, 0.8078432f), new Color(0.6862745f, 0.4f, 0.2352941f), new Color(0.5450981f, 0.427451f, 0.2156863f), new Color(0.3098039f, 0.254902f, 0.1764706f), new Color(0.1764706f, 0.1686275f, 0.1686275f), new Color(0.3843138f, 0.2352941f, 0.0509804f), new Color(0.6196079f, 0.6196079f, 0.6196079f), new Color(0.6196079f, 0.6196079f, 0.6196079f), new Color(0.2431373f, 0.2039216f, 0.145098f), new Color(0.1764706f, 0.1686275f, 0.1686275f)};
-
-    [Header("Eye Colors")]
-    public Color[] colorEyes = { new Color(1.00000f, 0.87843f, 0.74118f), new Color(1.00000f, 0.87843f, 0.74118f), new Color(1.00000f, 0.87843f, 0.74118f), new Color(1.00000f, 0.87843f, 0.74118f), new Color(1.00000f, 0.87843f, 0.74118f), new Color(1.00000f, 0.87843f, 0.74118f), new Color(1.00000f, 0.87843f, 0.74118f), new Color(1.00000f, 0.87843f, 0.74118f), };
-
-    [Header("Scar Colors")]
-    public Color[] colorScar = { };
-
-    [Header("Body Art Colors")]
-    public Color[] colorBodyArt = { new Color(0.0509804f, 0.6745098f, 0.9843138f), new Color(0.7215686f, 0.2666667f, 0.2666667f), new Color(0.3058824f, 0.7215686f, 0.6862745f), new Color(0.9254903f, 0.882353f, 0.8509805f), new Color(0.3098039f, 0.7058824f, 0.3137255f), new Color(0.5294118f, 0.3098039f, 0.6470588f), new Color(0.8666667f, 0.7764707f, 0.254902f), new Color(0.2392157f, 0.4588236f, 0.8156863f) };
-
-
-
-    void Awake()
+    private void Awake()
     {
-        _player = GameObject.Find("Player");
-        _showInventory = gameObject.GetComponent<ShowInventory>();
-        _playerControls = new PlayerControls();
+        UI_Inventory = GameObject.FindGameObjectWithTag("UI_Inventory");
+        UI_Customize = GameObject.FindGameObjectWithTag("UI_Customize");
+    }
+
+
+    void Start()
+    {
+        _player = gameObject;
+        _playerController = _player.GetComponent<PlayerController>();
         _playerAiming = GetComponent<PlayerAiming>();
+
+
+        _showInventory = GetComponent<ShowInventory>();
+        _playerControls = new PlayerControls();
         _playerAnimator = GetComponent<Animator>();
-        _allChildObjects = _player.GetComponentsInChildren<Transform>();
+        _allChildObjects = transform.Find("Modular_Characters").GetComponentsInChildren<Transform>();
+
+        
+
 
         BuildLists();
 
@@ -118,36 +114,20 @@ public class PlayerCustomize : MonoBehaviour
         _playerControls.Customize.MoveCamera.started += MoveCamera;
         _playerControls.Customize.MoveCamera.canceled += MoveCamera;
 
-        _vcam = GetComponentInChildren<CinemachineVirtualCamera>();
+        _vcam = _player.GetComponent<PlayerController>().GetCamera().GetComponent<CinemachineVirtualCamera>();
 
-        inputAxisProvider = GetComponent<Cinemachine.CinemachineInputProvider>();
-        xAxis.SetInputAxisProvider(0, inputAxisProvider);
-        yAxis.SetInputAxisProvider(1, inputAxisProvider);
+        enabled = false;
     }
 
+    private Quaternion _oldCameraRotation;
 
-    public void Initialize(Vector3 position)
+    public void Initialize()
     {
-        if (_showInventory.showInventory)
-        {
-            gameObject.GetComponent<PlayerCustomize>().enabled = false;
-            return;
-        }
-
-        inventoryToolbar.gameObject.SetActive(false);
+        UI_Inventory.SetActive(false);
 
         Cursor.lockState = CursorLockMode.None;
-
-
-
-        _vcamFollow = _vcam.GetCinemachineComponent<Cinemachine3rdPersonFollow>();
-        _player.GetComponent<PlayerController>()._isCustomizing = true;
-        _player.GetComponent<PlayerController>().enabled = false;
-        _player.GetComponent<HeadLookAtDirection>().enabled = false;
-        _player.GetComponent<PlayerAiming>().enabled = false;
-        _player.GetComponent<CheckInteraction>().enabled = false;
         
-        _player.GetComponent<ShowInventory>().toolbar.SetActive(false);
+        _showInventory.enabled = false;
 
 
         _playerAnimator.SetBool("isMoving", false);
@@ -156,60 +136,76 @@ public class PlayerCustomize : MonoBehaviour
         _playerAnimator.SetBool("isFalling", false);
 
 
+        UI_Customize.SetActive(true);
 
-        xAxis.Value = 0;
-        yAxis.Value = 0;
-
-        _targetRotation = Quaternion.Euler(position);
-        
-
-        _cameraMoving = true;
-
-        customizeCanvas.gameObject.SetActive(true);
-        
-
-        Invoke(nameof(CameraStop), 1f);
-
-        //_targetRotation = Quaternion.LookRotation(-Camera.main.transform.forward);
-        //_currentRotation = _targetRotation.eulerAngles.y;
+        _oldCameraRotation = _vcam.transform.rotation;
 
 
     }
-    
-    private void Update()
+
+    [ClientRpc]
+    void UpdateCharacterClientRpc(int[] _allChildObjectsIndex)
     {
-        if (_player.GetComponent<PlayerController>()._isCustomizing)
+        if (!IsHost)
         {
-            if (_cameraMoving)
+            for (int i = 0; i < _allChildObjectsIndex.Length; i++)
             {
-                _vcamFollow.CameraDistance = Mathf.Lerp(_vcamFollow.CameraDistance, 1.7f, Time.deltaTime * 5f);
-                _vcamFollow.ShoulderOffset = Vector3.Lerp(_vcamFollow.ShoulderOffset, new Vector3(0, -1, 0), Time.deltaTime * 5f);
-                
-                _lookAt.rotation = Quaternion.Slerp(_lookAt.rotation, _targetRotation, 5f * Time.deltaTime);
-                transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(-Camera.main.transform.forward, Vector3.up), Time.deltaTime * 5f);
+                ActivateItem(_allChildObjects[_allChildObjectsIndex[i]].gameObject);
             }
-            else if (_movingCamera)
-            {
-                xAxis.Update(Time.deltaTime);
-                yAxis.Update(Time.deltaTime);
-                _lookAt.eulerAngles = new Vector3(yAxis.Value, xAxis.Value, 0);
-            }
-            
-            
         }
         else
-        {            
-            _vcamFollow.CameraDistance = Mathf.Lerp(_vcamFollow.CameraDistance, 3f, Time.deltaTime * 5f);
-            _vcamFollow.ShoulderOffset = Vector3.Lerp(_vcamFollow.ShoulderOffset, new Vector3(1, -.5f, 0), Time.deltaTime * 5f);
+        {
+        }
+    }
 
-            _lookAt.rotation = Quaternion.Slerp(_lookAt.rotation, _targetRotation, 5f * Time.deltaTime);
+    [ServerRpc]
+    void UpdateCharacterServerRpc(int[] _allChildObjectsIndex)
+    {
+        if (!IsHost) return;
+        
+        {
+            for (int i = 0; i < _allChildObjectsIndex.Length; i++)
+            {
+                ActivateItem(_allChildObjects[_allChildObjectsIndex[i]].gameObject);
+            }
         }
     }
 
 
+    private void Update()
+    {
+
+
+        if (_player.GetComponent<PlayerController>().isCustomizing)
+        {
+            float distance = Vector3.Distance(_player.transform.position, playerPositionWhenCustomizing);
+            
+            if (distance > 0.01f)
+            {
+                _player.transform.position = Vector3.MoveTowards(_player.transform.position, playerPositionWhenCustomizing, Time.deltaTime * 2f);
+                _player.transform.rotation = Quaternion.RotateTowards(_player.transform.rotation, Quaternion.LookRotation(playerPositionWhenCustomizing - _player.transform.position, Vector3.up), Time.deltaTime * 360f);
+                _playerAnimator.SetBool("isMoving", true);
+            }
+            else
+            {
+                _player.transform.rotation = Quaternion.RotateTowards(_player.transform.rotation, Quaternion.Euler(0, playerRotationWhenCustomizing, 0), Time.deltaTime * 180f);
+                _playerAnimator.SetBool("isMoving", false);
+            }
+
+            // Prevent camera rotation
+            _playerAiming.cameraLookAt.eulerAngles = new Vector3(_playerAiming.yAxis.Value, _playerAiming.xAxis.Value, 0);
+
+        }
+    }
+
+
+    // list of all objects on character
+
+    public List<GameObject> allObjects = new List<GameObject>();
+
     // list of enabed objects on character
-    
     public List<GameObject> enabledObjects = new List<GameObject>();
+
 
     // character object lists
     // male list
@@ -223,8 +219,6 @@ public class PlayerCustomize : MonoBehaviour
     // universal list
     
     public CharacterObjectListsAllGender allGender;
-
-    
 
     
     private void BuildLists()
@@ -337,7 +331,6 @@ public class PlayerCustomize : MonoBehaviour
                 
                 if (result == 0)
                 {
-                    Debug.Log("Changed");
                     enabledObjects[i].SetActive(false);
                     enabledObjects.Remove(enabledObjects[i]);
                     break;
@@ -514,88 +507,93 @@ public class PlayerCustomize : MonoBehaviour
 
     public List<string> ColorTargets = new List<string>();
     
-
-    void CameraStop()
-    {
-        _cameraMoving = false;
-    }
-
     public void SaveCustomization()
     {
-        GameObject.Find("Quest").GetComponent<PrototypeQuest>().QuestObjectiveUpdate(2, 0); // QUEST
-        _player.GetComponent<PlayerController>()._isCustomizing = false;
-        _player.GetComponent<ShowInventory>().toolbar.SetActive(true);
-        inventoryToolbar.gameObject.SetActive(true);
+        GameObject.Find("QuestCustomize").GetComponent<PrototypeQuest>().QuestObjectiveUpdate(2, 0); // QUEST: Test Customization - Accept customization
+
+        _player.GetComponent<PlayerController>().isCustomizing = false;
+        
+        UI_Inventory.GetComponent<Canvas>().enabled = false;
 
         Cursor.lockState = CursorLockMode.Locked;
 
-        customizeCanvas.gameObject.SetActive(false);
+        UI_Customize.SetActive(false);
 
-        Invoke(nameof(Disable), 1f);
+        Disable();
     }
-
     
-
-
-
 
 
     public void Close(InputAction.CallbackContext context)
     {
-        if (!gameObject.GetComponent<PlayerController>()._isCustomizing) return;
+        if (!gameObject.GetComponent<PlayerController>().isCustomizing) return;
 
         
         Cursor.lockState = CursorLockMode.Locked;
 
-        GameObject.Find("Quest").GetComponent<PrototypeQuest>().QuestObjectiveUpdate(0, 0); // QUEST
 
         if (_player == null) return;
         
         switch (context.phase)
         {
             case InputActionPhase.Started:
-                
-                _player.GetComponent<PlayerController>()._isCustomizing = false;
-                _player.GetComponent<ShowInventory>().toolbar.SetActive(true);
-                
-                inventoryToolbar.gameObject.SetActive(true);
-                customizeCanvas.gameObject.SetActive(false);
 
-                Invoke(nameof(Disable), 1f);
+                GameObject.Find("QuestCustomize").GetComponent<PrototypeQuest>().QuestObjectiveUpdate(0, 1); // QUEST: Test Customization - Open/Close customization
+
+                UI_Inventory.GetComponent<Canvas>().enabled = false;
+                UI_Customize.SetActive(false);
+
+                Disable();
                 break;
         }
     }
 
     public void MoveCamera(InputAction.CallbackContext context)
     {
-        if (_player == null || !gameObject.GetComponent<PlayerController>()._isCustomizing) return;
+        if (_player == null || !gameObject.GetComponent<PlayerController>().isCustomizing) return;
         
         switch (context.phase)
         {
             case InputActionPhase.Started:
-                _movingCamera = true;
                 Cursor.lockState = CursorLockMode.Confined;
                 break;
             case InputActionPhase.Canceled:
                 Cursor.lockState = CursorLockMode.None;
-                _movingCamera = false;
                 break;
         }
     }
     
+    
+
     void Disable()
     {
         _player.GetComponent<PlayerController>().enabled = true;
-        _player.GetComponent<HeadLookAtDirection>().enabled = true;
         _player.GetComponent<PlayerAiming>().enabled = true;
-        _player.GetComponent<CheckInteraction>().enabled = true;
 
 
-        customizeCanvas.gameObject.SetActive(false);
+        _allChildObjectsIndex = new int[enabledObjects.Count];
 
+        for (int i = 0; i < enabledObjects.Count; i++)
+        {
+            for (int j = 0; j < _allChildObjects.Length; j++)
+            {
+                if (_allChildObjects[j].name == enabledObjects[i].name)
+                {
+                    _allChildObjectsIndex[i] = j;
+                }
+            }
+        }
 
-        _player.GetComponent<PlayerAiming>().xAxis.Value = 0;
-        _player.GetComponent<PlayerAiming>().yAxis.Value = 0;
+        if (IsHost)
+        {
+            UpdateCharacterServerRpc(_allChildObjectsIndex);
+        }
+        else
+        {
+            UpdateCharacterClientRpc(_allChildObjectsIndex);
+        }
+
+        _player.GetComponent<PlayerController>().isCustomizing = false;
 
         enabled = false;
     }

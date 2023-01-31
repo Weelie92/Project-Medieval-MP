@@ -45,15 +45,10 @@ public class PrototypeQuestManager : MonoBehaviour
 
         if (_questCount >= questList.Count)
         {
-
-
-
-            
-            
             Invoke("LockMouse", .3f);
 
             prototypeQuestFeedback.gameObject.SetActive(true);
-            GameObject.Find("Player").GetComponent<PlayerController>()._isTakingSurvey = true;
+            GameObject.FindGameObjectWithTag("Player").GetComponent<PlayerController>().isTakingSurvey = true;
         }
 
     }
@@ -100,7 +95,7 @@ public class PrototypeQuestManager : MonoBehaviour
 
     public void CloseSurvey()
     {
-        GameObject.Find("Player").GetComponent<PlayerController>()._isTakingSurvey = false;
+        GameObject.FindGameObjectWithTag("Player").GetComponent<PlayerController>().isTakingSurvey = false;
         
         Cursor.lockState = CursorLockMode.Locked;
 

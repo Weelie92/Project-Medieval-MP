@@ -14,12 +14,6 @@ AnimatorStateTransition:
   - m_ConditionMode: 6
     m_ConditionEvent: PlayerWeapon
     m_EventTreshold: 0
-  - m_ConditionMode: 6
-    m_ConditionEvent: TriggerNumber
-    m_EventTreshold: 18
-  - m_ConditionMode: 1
-    m_ConditionEvent: Trigger
-    m_EventTreshold: 0
   m_DstStateMachine: {fileID: 0}
   m_DstState: {fileID: 3658382570089488712}
   m_Solo: 0
@@ -41,10 +35,7 @@ AnimatorStateTransition:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: 
-  m_Conditions:
-  - m_ConditionMode: 1
-    m_ConditionEvent: isFalling
-    m_EventTreshold: 0
+  m_Conditions: []
   m_DstStateMachine: {fileID: 0}
   m_DstState: {fileID: 3658382570089488712}
   m_Solo: 0
@@ -1285,14 +1276,14 @@ AnimatorStateMachine:
   m_AnyStateTransitions: []
   m_EntryTransitions: []
   m_StateMachineTransitions:
-  - first: {fileID: 7063323031302278973}
-    second:
-    - {fileID: -7372687005220297754}
-    - {fileID: -2243596856796956069}
   - first: {fileID: -1305837457222334792}
     second:
     - {fileID: 9091568547230118210}
     - {fileID: 5741488493131305605}
+  - first: {fileID: 7063323031302278973}
+    second:
+    - {fileID: -7372687005220297754}
+    - {fileID: -2243596856796956069}
   m_StateMachineBehaviours: []
   m_AnyStatePosition: {x: 40, y: 100, z: 0}
   m_EntryPosition: {x: 40, y: 130, z: 0}

@@ -23,15 +23,15 @@ public class PrototypeQuest : MonoBehaviour
     [HideInInspector] public TextMeshProUGUI questObjectiveCount1;
     [HideInInspector] public TextMeshProUGUI questObjectiveCount2;
 
-    public int objectiveCount = 0;
+    [HideInInspector] public int objectiveCount = 0;
 
     HashSet<int> objectives0 = new HashSet<int>();
     HashSet<int> objectives1 = new HashSet<int>();
     HashSet<int> objectives2 = new HashSet<int>();
 
-    public int objectivesComplete0 = 0;
-    public int objectivesComplete1 = 0;
-    public int objectivesComplete2 = 0;
+    [HideInInspector] public int objectivesComplete0 = 0;
+    [HideInInspector] public int objectivesComplete1 = 0;
+    [HideInInspector] public int objectivesComplete2 = 0;
 
     public string questNameString;
 
@@ -43,6 +43,7 @@ public class PrototypeQuest : MonoBehaviour
     public int questObjectiveCountMax1;
     public int questObjectiveCountMax2;
 
+    [Header("Replace ID with with objective Count")]
     public string pingScriptCode0;
     public string pingScriptCode1;
     public string pingScriptCode2;
@@ -94,35 +95,64 @@ public class PrototypeQuest : MonoBehaviour
         }
 
         string objectName = GameObject.Find(gameObject.transform.name).name;
-        pingScriptCode0 = "GameObject.Find(\"" + objectName + "\").GetComponent<PrototypeQuest>().QuestObjectiveUpdate(0, ID" + objectiveCount + "); // QUEST";
-        pingScriptCode1 = "GameObject.Find(\"" + objectName + "\").GetComponent<PrototypeQuest>().QuestObjectiveUpdate(1, ID" + objectiveCount + "); // QUEST";
-        pingScriptCode2 = "GameObject.Find(\"" + objectName + "\").GetComponent<PrototypeQuest>().QuestObjectiveUpdate(2, ID" + objectiveCount + "); // QUEST";
+        pingScriptCode0 = "GameObject.Find(\"" + objectName + "\").GetComponent<PrototypeQuest>().QuestObjectiveUpdate(0, ID" + questObjectiveCountMax0 + "); // QUEST: " + questNameString + " - " + questObjectiveString0;
+        pingScriptCode1 = "GameObject.Find(\"" + objectName + "\").GetComponent<PrototypeQuest>().QuestObjectiveUpdate(1, ID" + questObjectiveCountMax1 + "); // QUEST: " + questNameString + " - " + questObjectiveString1;
+        pingScriptCode2 = "GameObject.Find(\"" + objectName + "\").GetComponent<PrototypeQuest>().QuestObjectiveUpdate(2, ID" + questObjectiveCountMax2 + "); // QUEST: " + questNameString + " - " + questObjectiveString2;
 
     }
 
     public void QuestObjectiveUpdate(int objectiveID, int objectiveCount)
     {
-        switch (objectiveID)
+        // 100 = repeatable ping
+        if (objectiveCount == 100)
         {
-            case 0:
-                if (!objectives0.Add(objectiveCount) || objectivesComplete0 >= questObjectiveCountMax0) return;
-                
-                objectivesComplete0++;
-                questObjectiveCount0.text = objectivesComplete0 + "/" + questObjectiveCountMax0;
-                break;
-            case 1:
-                if (!objectives1.Add(objectiveCount) || objectivesComplete1 >= questObjectiveCountMax1) return;
+            switch (objectiveID)
+            {
+                case 0:
+                    if (objectivesComplete0 >= questObjectiveCountMax0) return;
 
-                objectivesComplete1++;
-                questObjectiveCount1.text = objectivesComplete1 + "/" + questObjectiveCountMax1;
-                break;
-            case 2:
-                if (!objectives2.Add(objectiveCount) || objectivesComplete2 >= questObjectiveCountMax2) return;
+                    objectivesComplete0++;
+                    questObjectiveCount0.text = objectivesComplete0 + "/" + questObjectiveCountMax0;
+                    break;
+                case 1:
+                    if (objectivesComplete1 >= questObjectiveCountMax1) return;
 
-                objectivesComplete2++;
-                questObjectiveCount2.text = objectivesComplete2 + "/" + questObjectiveCountMax2;
-                break;
+                    objectivesComplete1++;
+                    questObjectiveCount1.text = objectivesComplete1 + "/" + questObjectiveCountMax1;
+                    break;
+                case 2:
+                    if (objectivesComplete2 >= questObjectiveCountMax2) return;
+
+                    objectivesComplete2++;
+                    questObjectiveCount2.text = objectivesComplete2 + "/" + questObjectiveCountMax2;
+                    break;
+            }
         }
+        else
+        {
+            switch (objectiveID)
+            {
+                case 0:
+                    if (!objectives0.Add(objectiveCount) || objectivesComplete0 >= questObjectiveCountMax0) return;
+
+                    objectivesComplete0++;
+                    questObjectiveCount0.text = objectivesComplete0 + "/" + questObjectiveCountMax0;
+                    break;
+                case 1:
+                    if (!objectives1.Add(objectiveCount) || objectivesComplete1 >= questObjectiveCountMax1) return;
+
+                    objectivesComplete1++;
+                    questObjectiveCount1.text = objectivesComplete1 + "/" + questObjectiveCountMax1;
+                    break;
+                case 2:
+                    if (!objectives2.Add(objectiveCount) || objectivesComplete2 >= questObjectiveCountMax2) return;
+
+                    objectivesComplete2++;
+                    questObjectiveCount2.text = objectivesComplete2 + "/" + questObjectiveCountMax2;
+                    break;
+            }
+        }
+        
 
         
 

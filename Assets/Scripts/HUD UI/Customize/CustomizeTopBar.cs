@@ -20,6 +20,10 @@ public class CustomizeTopBar : MonoBehaviour
         _traitsButton = transform.GetChild(1).GetComponent<Button>();
         _skillsButton = transform.GetChild(2).GetComponent<Button>();
 
+        _apperancePanel = GameObject.Find("UI_Customize_Panels_Appearance");
+        _traitsPanel = GameObject.Find("UI_Customize_Panels_Traits");
+        _skillsPanel = GameObject.Find("UI_Customize_Panels_Skills");
+
         _appearanceButton.onClick.AddListener(() => { OnClick(_appearanceButton.name); });
         _traitsButton.onClick.AddListener(() => { OnClick(_traitsButton.name); });
         _skillsButton.onClick.AddListener(() => { OnClick(_skillsButton.name); });
@@ -27,9 +31,11 @@ public class CustomizeTopBar : MonoBehaviour
 
     public void OnClick(string buttonName)
     {
+        Debug.Log(buttonName);
         // Show correct panel
         switch (buttonName)
         {
+           
             case "AppearanceButton":
                 _apperancePanel.gameObject.SetActive(true);
                 _traitsPanel.gameObject.SetActive(false);

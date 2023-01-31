@@ -16,6 +16,12 @@ TagManager:
   - PrototypeQuestUI
   - Quest
   - QuestManager
+  - PauseMenu
+  - UI_Customize
+  - UI_Inventory
+  - UI_Survey
+  - UI_Quest
+  - UI_PauseMenu
   layers:
   - Default
   - TransparentFX
