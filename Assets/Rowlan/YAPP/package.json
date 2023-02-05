@@ -1,0 +1,24 @@
+{
+  "name": "com.rowlan.yapp",
+  "displayName": "YAPP",
+  "version": "1.4.5",
+  "author": {
+	"name": "Rowlan",
+	"email": "",
+	"url": ""
+  },
+  "unity": "2019.1",
+  "description": "Yet Another Prefab Painter - Easily distribute Prefabs using Brush and Spline tools while optionally applying Physics to the Prefabs",
+  "keywords": [
+    "Editor Tools"
+  ],
+  "category": "Scripts",
+  "type": "tool",
+  "samples": [
+    {
+      "displayName": "YAPP Demo",
+      "description": "Demo scene with prefabs for toying around",
+      "path": "Samples~/Demo"
+    }
+  ]
+}

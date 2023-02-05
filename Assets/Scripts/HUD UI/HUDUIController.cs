@@ -15,11 +15,11 @@ public class HUDUIController : MonoBehaviour
 
     private void Start()
     {
-        _UI_PauseMenu.GetComponent<Canvas>().enabled = false;
-        _UI_Customize.GetComponent<Canvas>().enabled = false;
-        _UI_Inventory.GetComponent<Canvas>().enabled = false;
-        _UI_Survey.GetComponent<Canvas>().enabled = false;
-        _UI_Quest.GetComponent<Canvas>().enabled = false;
-        _UI_Quest_Feedbackform.GetComponent<Canvas>().enabled = false;
+        if(_UI_PauseMenu != null) _UI_PauseMenu.GetComponent<Canvas>().enabled = false;
+        if(_UI_Customize != null) _UI_Customize.GetComponent<Canvas>().enabled = false;
+        if (_UI_Inventory != null) _UI_Inventory.GetComponent<Canvas>().enabled = false;
+        if (_UI_Survey != null) _UI_Survey.GetComponent<Canvas>().enabled = false;
+        if (_UI_Quest != null) _UI_Quest.GetComponent<Canvas>().enabled = false;
+        if (_UI_Quest_Feedbackform != null) _UI_Quest_Feedbackform.GetComponent<Canvas>().enabled = false;
     }
 }

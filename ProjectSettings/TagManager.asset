@@ -22,6 +22,8 @@ TagManager:
   - UI_Survey
   - UI_Quest
   - UI_PauseMenu
+  - Pickup
+  - GameManager
   layers:
   - Default
   - TransparentFX

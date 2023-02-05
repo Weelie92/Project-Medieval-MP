@@ -6,7 +6,7 @@ public class MouseoverOption : MonoBehaviour, IPointerEnterHandler, IPointerExit
 {
     
 
-    public PlayerCustomize playerCustomize;
+    public CustomizeUI customizeUI;
 
     private void Start()
     {
@@ -17,8 +17,8 @@ public class MouseoverOption : MonoBehaviour, IPointerEnterHandler, IPointerExit
     {
         //if (playerCustomize._movingCamera) return;
         //if (GameObject.Find("Player").GetComponent<PlayerCustomize>()._movingCamera) return;
-            
-        playerCustomize.TempActivateItem(eventData.pointerEnter);
+
+        customizeUI.TempActivateItem(eventData.pointerEnter);
     }
 
     public void OnPointerExit(PointerEventData eventData)
@@ -26,7 +26,7 @@ public class MouseoverOption : MonoBehaviour, IPointerEnterHandler, IPointerExit
         //if (playerCustomize._movingCamera) return;
         //if (GameObject.Find("Player").GetComponent<PlayerCustomize>()._movingCamera) return;
 
-        playerCustomize.TempActivateItem(null);
+        customizeUI.TempActivateItem(null);
     }
 
     public void OnPointerClick(PointerEventData eventData)

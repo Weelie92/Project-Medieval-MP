@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-[CreateAssetMenu(menuName = "Inventory/Item Prefab List")]
+[CreateAssetMenu(menuName = "ScriptableObjects/Inventory/Item Prefab List")]
 
 public class ItemPrefabList : ScriptableObject
 {

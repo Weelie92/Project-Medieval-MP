@@ -53893,11 +53893,11 @@ GameObject:
   - component: {fileID: 6194150231937325299}
   - component: {fileID: 686566685}
   - component: {fileID: 4038130276060905900}
-  - component: {fileID: 1912751673005490716}
   - component: {fileID: 655007006}
   - component: {fileID: 1229448504}
   - component: {fileID: -366384703480514641}
   - component: {fileID: 2373311634991716082}
+  - component: {fileID: 8054399989940372392}
   m_Layer: 10
   m_Name: Player
   m_TagString: Player
@@ -54173,6 +54173,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _cameraFollowTarget: {fileID: 2092370300}
+  _customizePlayerData: {fileID: 0}
   nextAttackTime: 0
   playerStaminaRegen: 0
   isMoving: 0
@@ -54465,80 +54466,6 @@ MonoBehaviour:
   m_ReferenceObject: {fileID: 0}
   m_DistanceToObject: 20
   m_Multithread: 1
---- !u!114 &1912751673005490716
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6083143964201592434}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 450355bea893f284ca00d95a55cb8d74, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _player: {fileID: 0}
-  _playerController: {fileID: 0}
-  _playerAiming: {fileID: 0}
-  _cameraDistance: 3
-  _tempObject: {fileID: 0}
-  UI_Customize: {fileID: 0}
-  UI_Inventory: {fileID: 0}
-  _lookAt: {fileID: 2092370301}
-  cameraPositionWhenCustomizing: {x: 0, y: 0, z: 0}
-  playerPositionWhenCustomizing: {x: 0, y: 0, z: 0}
-  playerRotationWhenCustomizing: 0
-  isMale: 1
-  mat: {fileID: 2100000, guid: ea128b040f8b0af4c9d2de400aaff30a, type: 2}
-  enabledObjects: []
-  male:
-    headAllElements: []
-    headNoElements: []
-    eyebrow: []
-    facialHair: []
-    torso: []
-    arm_Upper_Right: []
-    arm_Upper_Left: []
-    arm_Lower_Right: []
-    arm_Lower_Left: []
-    hand_Right: []
-    hand_Left: []
-    hips: []
-    leg_Right: []
-    leg_Left: []
-  female:
-    headAllElements: []
-    headNoElements: []
-    eyebrow: []
-    facialHair: []
-    torso: []
-    arm_Upper_Right: []
-    arm_Upper_Left: []
-    arm_Lower_Right: []
-    arm_Lower_Left: []
-    hand_Right: []
-    hand_Left: []
-    hips: []
-    leg_Right: []
-    leg_Left: []
-  allGender:
-    headCoverings_Base_Hair: []
-    headCoverings_No_FacialHair: []
-    headCoverings_No_Hair: []
-    all_Hair: []
-    all_Head_Attachment: []
-    chest_Attachment: []
-    back_Attachment: []
-    shoulder_Attachment_Right: []
-    shoulder_Attachment_Left: []
-    elbow_Attachment_Right: []
-    elbow_Attachment_Left: []
-    hips_Attachment: []
-    knee_Attachement_Right: []
-    knee_Attachement_Left: []
-    all_12_Extra: []
-    elf_Ear: []
-  ColorTargets: []
 --- !u!114 &655007006
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -54610,6 +54537,20 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   TransitionStateInfoList: []
   m_Animator: {fileID: 6141872123917995356}
+--- !u!114 &8054399989940372392
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6083143964201592434}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fc9810d73e5fa8c40a546fa5372a3886, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  allChildObjects: []
+  enabledObjects: []
 --- !u!1 &6083146129099047136
 GameObject:
   m_ObjectHideFlags: 0

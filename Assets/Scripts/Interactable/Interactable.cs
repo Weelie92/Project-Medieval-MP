@@ -36,20 +36,20 @@ public class Interactable : MonoBehaviour
             case "Door":
                 break;
             case "Customize":
-                GameObject.Find("QuestCustomize").GetComponent<PrototypeQuest>().QuestObjectiveUpdate(0, 0); // QUEST: Test Customization - Open/Close customization
+                //GameObject.Find("QuestCustomize").GetComponent<PrototypeQuest>().QuestObjectiveUpdate(0, 0); // QUEST: Test Customization - Open/Close customization
 
-                PlayerCustomize playerCustomize = player.GetComponent<PlayerCustomize>();
+                //PlayerCustomize playerCustomize = player.GetComponent<PlayerCustomize>();
 
-                _UI_Customize.GetComponent<Canvas>().enabled = true;
-                _UI_Customize.GetComponent<CustomizeUI>().playerCustomize = playerCustomize;
-                _UI_Customize.GetComponent<CustomizeUI>().Initialize();
+                //_UI_Customize.GetComponent<Canvas>().enabled = true;
+                //_UI_Customize.GetComponent<CustomizeUI>().playerCustomize = playerCustomize;
+                //_UI_Customize.GetComponent<CustomizeUI>().Initialize();
 
-                playerCustomize.enabled = true;
-                playerCustomize.cameraPositionWhenCustomizing = _cameraPositionWhenCustomizing;
-                playerCustomize.playerPositionWhenCustomizing = _playerPositionWhenCustomizing;
-                playerCustomize.playerRotationWhenCustomizing = _playerRotationWhenCustomizing;
-                playerCustomize.Initialize();
-                player.GetComponent<PlayerController>().isCustomizing = true;
+                //playerCustomize.enabled = true;
+                //playerCustomize.cameraPositionWhenCustomizing = _cameraPositionWhenCustomizing;
+                //playerCustomize.playerPositionWhenCustomizing = _playerPositionWhenCustomizing;
+                //playerCustomize.playerRotationWhenCustomizing = _playerRotationWhenCustomizing;
+                //playerCustomize.Initialize();
+                //player.GetComponent<PlayerController>().isCustomizing = true;
                 break;
             case "Lootable":
                 _interactE.enabled = false;

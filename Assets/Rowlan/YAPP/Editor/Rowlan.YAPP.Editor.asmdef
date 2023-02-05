@@ -1,0 +1,19 @@
+{
+    "name": "Rowlan.YAPP.Editor",
+    "references": [
+        "AwesomeTechnologies.VegetationStudioPro.Editor",
+        "AwesomeTechnologies.VegetationStudioPro.Runtime",
+        "Rowlan.YAPP.Runtime"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

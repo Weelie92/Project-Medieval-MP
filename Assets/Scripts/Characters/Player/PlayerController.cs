@@ -6,9 +6,12 @@ using UnityEngine.SceneManagement;
 using UnityEngine.InputSystem;
 using System.Collections.Generic;
 using Cinemachine;
+using System;
+using UnityEngine.Networking.Types;
 
 public class PlayerController : NetworkBehaviour
 {
+
     // Components
     [Header("Components")]
     private Camera _camera;
@@ -19,6 +22,9 @@ public class PlayerController : NetworkBehaviour
     private JUFootPlacement _footPlacementScript;
     private Animator _playerAnimator;
     private ShowInventory _showInventory;
+
+    // UI
+    [Header("UI")]
 
     // Scriptable Objects
     [Header("Scriptable Objects")]
@@ -43,6 +49,10 @@ public class PlayerController : NetworkBehaviour
     public bool isPaused = false;
     public bool isInventoryOpen = false;
 
+    
+
+
+
     [HideInInspector] public string playerWeaponString = "Unarmed";
 
     [Header("UI/HUD")]
@@ -56,7 +66,7 @@ public class PlayerController : NetworkBehaviour
     private float _fallTimer = 0f;
     
     private bool _attackLeft = true;
-
+    
 
     // Stats
     [Header("Stats")]
@@ -93,11 +103,12 @@ public class PlayerController : NetworkBehaviour
     {
         enabled = false;
         _camera = Camera.main;
-
         GetComponent<CharacterController>().enabled = false;
         GetComponent<CapsuleCollider>().enabled = false;
-        
     }
+ 
+
+    
 
     public Camera GetCamera()
     {
@@ -108,10 +119,17 @@ public class PlayerController : NetworkBehaviour
     {
         base.OnNetworkSpawn();
 
+        foreach(PlayerData player in GameObject.FindGameObjectWithTag("GameManager").GetComponent<ConnectedPlayers>()._playerList)
+        {
+            
+        }
+
+        
+
         enabled = IsClient;
 
         if (!IsOwner)
-        {
+        { 
             enabled = false;
             GetComponent<CharacterController>().enabled = false;
             GetComponent<CapsuleCollider>().enabled = true;
@@ -123,7 +141,19 @@ public class PlayerController : NetworkBehaviour
 
         var cinemachineVirtualCamera = FindObjectOfType<CinemachineVirtualCamera>();
         cinemachineVirtualCamera.Follow = _cameraFollowTarget.transform;
+
+
+        GameObject.FindGameObjectWithTag("UI_Customize").GetComponent<CustomizeUI>()._player = gameObject;
+        GameObject.FindGameObjectWithTag("UI_Customize").GetComponent<CustomizeUI>().Initialize();
+
+
+        transform.position = new Vector3(23, .55f, 7);
+
+
+        // GetComponent<CustomizeUI>().Initialize();
     }
+
+    
 
     void Start()
     {
@@ -361,7 +391,7 @@ public class PlayerController : NetworkBehaviour
                 }
                 else
                 {
-                    _playerAnimator.SetActionTrigger(AnimatorTrigger.AttackTrigger, (int)Mathf.Round(Random.Range(1, 6)));
+                    _playerAnimator.SetActionTrigger(AnimatorTrigger.AttackTrigger, (int)Mathf.Round(UnityEngine.Random.Range(1, 6)));
                 }
                 break;
             default:
@@ -456,6 +486,7 @@ public class PlayerController : NetworkBehaviour
 
     public void Jump(InputAction.CallbackContext context)
     {
+
         switch (context.phase)
         {
             case InputActionPhase.Started:
@@ -526,8 +557,6 @@ public class PlayerController : NetworkBehaviour
 
     public void MainHand(InputAction.CallbackContext context)
     {
-
-
         switch (context.phase)
         {
             case InputActionPhase.Started:
@@ -601,12 +630,12 @@ public class PlayerController : NetworkBehaviour
                     break;
                 }
 
-                if (isCustomizing)
-                {
-                    GetComponent<PlayerCustomize>().Close(context);
-                    isCustomizing = false;
-                    break;
-                }
+                //if (isCustomizing)
+                //{
+                //    GetComponent<PlayerCustomize>().Close(context);
+                //    isCustomizing = false;
+                //    break;
+                //}
 
                 if (isTakingSurvey)
                 {
@@ -651,7 +680,7 @@ public class PlayerController : NetworkBehaviour
         switch (context.phase)
         {
             case InputActionPhase.Started:
-                SceneManager.LoadScene("Main");
+                SceneManager.LoadScene("Lobby");
                 break;
 
             case InputActionPhase.Performed:
