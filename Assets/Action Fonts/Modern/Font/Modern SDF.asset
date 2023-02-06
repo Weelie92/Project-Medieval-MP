@@ -148,18 +148,72 @@ MonoBehaviour:
     m_StrikethroughOffset: 18
     m_StrikethroughThickness: 6.591797
     m_TabWidth: 22
-  m_GlyphTable: []
-  m_CharacterTable: []
+  m_GlyphTable:
+  - m_Index: 66
+    m_Metrics:
+      m_Width: 45
+      m_Height: 2.640625
+      m_HorizontalBearingX: 0
+      m_HorizontalBearingY: -4.390625
+      m_HorizontalAdvance: 45
+    m_GlyphRect:
+      m_X: 101
+      m_Y: 10
+      m_Width: 45
+      m_Height: 4
+    m_Scale: 1
+    m_AtlasIndex: 0
+    m_ClassDefinitionType: 0
+  - m_Index: 213
+    m_Metrics:
+      m_Width: 71.015625
+      m_Height: 11.859375
+      m_HorizontalBearingX: 5.671875
+      m_HorizontalBearingY: 11.640625
+      m_HorizontalAdvance: 90
+    m_GlyphRect:
+      m_X: 10
+      m_Y: 10
+      m_Width: 72
+      m_Height: 13
+    m_Scale: 1
+    m_AtlasIndex: 0
+    m_ClassDefinitionType: 0
+  m_CharacterTable:
+  - m_ElementType: 1
+    m_Unicode: 95
+    m_GlyphIndex: 66
+    m_Scale: 1
+  - m_ElementType: 1
+    m_Unicode: 8230
+    m_GlyphIndex: 213
+    m_Scale: 1
   m_AtlasTextures:
   - {fileID: 8414589664444773043}
   m_AtlasTextureIndex: 0
   m_IsMultiAtlasTexturesEnabled: 0
   m_ClearDynamicDataOnBuild: 0
-  m_UsedGlyphRects: []
-  m_FreeGlyphRects:
+  m_UsedGlyphRects:
   - m_X: 0
     m_Y: 0
+    m_Width: 91
+    m_Height: 32
+  - m_X: 91
+    m_Y: 0
+    m_Width: 64
+    m_Height: 23
+  m_FreeGlyphRects:
+  - m_X: 0
+    m_Y: 32
     m_Width: 1023
+    m_Height: 991
+  - m_X: 91
+    m_Y: 23
+    m_Width: 932
+    m_Height: 1000
+  - m_X: 155
+    m_Y: 0
+    m_Width: 868
     m_Height: 1023
   m_fontInfo:
     Name: 

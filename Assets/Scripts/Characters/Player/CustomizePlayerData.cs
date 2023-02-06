@@ -23,7 +23,6 @@ public class CustomizePlayerData : NetworkBehaviour
 
     private void OnDisable()
     {
-        Debug.Log("Disabled");
         allNetworkChildObjectsIndex.OnListChanged -= OnListChangedEvent;
     }
 

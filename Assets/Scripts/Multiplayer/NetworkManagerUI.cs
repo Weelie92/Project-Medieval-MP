@@ -7,26 +7,26 @@ using UnityEngine.UI;
 public class NetworkManagerUI : MonoBehaviour
 {
     
-    [SerializeField] private Button _serverBtn;
+
     [SerializeField] private Button _hostBtn;
     [SerializeField] private Button _clientBtn;
 
 
     private void Awake()
     {
-        _serverBtn.onClick.AddListener(() =>
-        {
-            NetworkManager.Singleton.StartServer();
-        });
-
         _hostBtn.onClick.AddListener(() =>
         {
             NetworkManager.Singleton.StartHost();
+
+            GameObject.FindGameObjectWithTag("UI_Network").SetActive(false);
+
         });
-        
+
         _clientBtn.onClick.AddListener(() =>
         {
             NetworkManager.Singleton.StartClient();
+
+            GameObject.FindGameObjectWithTag("UI_Network").SetActive(false);
         });
     }
 }

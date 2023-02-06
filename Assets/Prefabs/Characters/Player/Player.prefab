@@ -24,7 +24,7 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2092370300}
-  m_LocalRotation: {x: -0, y: -1, z: -0, w: 0}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 3.899, y: 0.937, z: 1.541}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -53893,7 +53893,6 @@ GameObject:
   - component: {fileID: 6194150231937325299}
   - component: {fileID: 686566685}
   - component: {fileID: 4038130276060905900}
-  - component: {fileID: 655007006}
   - component: {fileID: 1229448504}
   - component: {fileID: -366384703480514641}
   - component: {fileID: 2373311634991716082}
@@ -54173,7 +54172,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _cameraFollowTarget: {fileID: 2092370300}
-  _customizePlayerData: {fileID: 0}
   nextAttackTime: 0
   playerStaminaRegen: 0
   isMoving: 0
@@ -54466,21 +54464,6 @@ MonoBehaviour:
   m_ReferenceObject: {fileID: 0}
   m_DistanceToObject: 20
   m_Multithread: 1
---- !u!114 &655007006
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6083143964201592434}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6022d9bc25df79a4299fe2071bdba4b2, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  UI_Inventory_Main: {fileID: 0}
-  UI_Inventory_Toolbar: {fileID: 0}
-  UI_Inventory_BG: {fileID: 0}
 --- !u!114 &1229448504
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -54550,7 +54533,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   allChildObjects: []
-  enabledObjects: []
 --- !u!1 &6083146129099047136
 GameObject:
   m_ObjectHideFlags: 0

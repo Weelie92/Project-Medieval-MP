@@ -7,23 +7,15 @@ TagManager:
   - Shadow
   - Collide
   - Customize
-  - InventorySlot
   - Lootable
   - TopLayer
-  - InventoryTextAmount
   - Form
-  - InventoryItem
-  - PrototypeQuestUI
-  - Quest
-  - QuestManager
-  - PauseMenu
   - UI_Customize
-  - UI_Inventory
   - UI_Survey
-  - UI_Quest
   - UI_PauseMenu
   - Pickup
   - GameManager
+  - UI_Network
   layers:
   - Default
   - TransparentFX

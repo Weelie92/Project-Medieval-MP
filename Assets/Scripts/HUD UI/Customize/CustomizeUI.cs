@@ -1,14 +1,10 @@
-using System.Collections;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Cinemachine;
-using PsychoticLab;
 using TMPro;
-using Unity.Netcode;
 using UnityEngine;
-using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
-using UnityEngine.Networking.Types;
 using UnityEngine.UI;
 
 public class CustomizeUI : MonoBehaviour
@@ -43,7 +39,6 @@ public class CustomizeUI : MonoBehaviour
     [SerializeField] private PlayerController _playerController;
     [SerializeField] private CustomizePlayerData _customizePlayerData;
     [SerializeField] private PlayerAiming _playerAiming;
-    [SerializeField] private ShowInventory _showInventory;
     [SerializeField] private Animator _playerAnimator;
     [SerializeField] private PlayerControls _playerControls;
     [SerializeField] private CinemachineVirtualCamera _vcam;
@@ -52,30 +47,21 @@ public class CustomizeUI : MonoBehaviour
     [Header("Children/Objects")]
     [SerializeField] private ScriptableObject _allPlayerModules;
 
-    [SerializeField] private GameObject _UI_Customize;
-    [SerializeField] private GameObject _UI_Inventory;
-
     [SerializeField] private Transform _lookAt;
-
-    
 
     public Vector3 cameraPositionWhenCustomizing;
     public Vector3 playerPositionWhenCustomizing;
     public float playerRotationWhenCustomizing;
 
-
     public int[] activePartsIndex;
 
+    private List<GameObject> _oldEnabledObjects = new List<GameObject>();
     public List<GameObject> enabledObjects = new List<GameObject>();
-
-
 
     public List<GameObject> playerList = new List<GameObject>();
 
 
     [SerializeField] private bool _isMale = true;
-
-    //[SerializeField] private TMP_Dropdown headDropdown;
 
     [Header("Material")]
     [SerializeField] private Material _mat;
@@ -107,147 +93,202 @@ public class CustomizeUI : MonoBehaviour
     [Header("Body Art Colors")]
     public Color[] colorBodyArt = { new Color(0.0509804f, 0.6745098f, 0.9843138f), new Color(0.7215686f, 0.2666667f, 0.2666667f), new Color(0.3058824f, 0.7215686f, 0.6862745f), new Color(0.9254903f, 0.882353f, 0.8509805f), new Color(0.3098039f, 0.7058824f, 0.3137255f), new Color(0.5294118f, 0.3098039f, 0.6470588f), new Color(0.8666667f, 0.7764707f, 0.254902f), new Color(0.2392157f, 0.4588236f, 0.8156863f) };
 
+    [SerializeField] private bool _isPlayerMoving = false;
+    [SerializeField] private bool _isCameraMoving = false;
 
-    private void Awake()
-    {
-        _UI_Inventory = GameObject.FindGameObjectWithTag("UI_Inventory");
-        _UI_Customize = GameObject.FindGameObjectWithTag("UI_Customize");
-    }
+    [SerializeField] private Vector3 targetShoulderOffset = Vector3.zero;
 
-    private bool _startUpdate = false;
+    
 
     private void Update()
     {
-        if (!_startUpdate) return;
-
-        if (_player.GetComponent<PlayerController>().isCustomizing)
+        if (!_playerController) return;
+        
+        if (_playerController.isCustomizing)
         {
-            float distance = Vector3.Distance(_player.transform.position, playerPositionWhenCustomizing);
+            targetShoulderOffset = new Vector3(0, -1f, 0);
+        }
+        else if (_isCameraMoving)
+        {
+            targetShoulderOffset = new Vector3(.5f, -.5f, 0);
+        }
 
-            if (distance > 0.01f)
-            {
-                _player.transform.position = Vector3.MoveTowards(_player.transform.position, playerPositionWhenCustomizing, Time.deltaTime * 2f);
-                _player.transform.rotation = Quaternion.RotateTowards(_player.transform.rotation, Quaternion.LookRotation(playerPositionWhenCustomizing - _player.transform.position, Vector3.up), Time.deltaTime * 360f);
-                _playerAnimator.SetBool("isMoving", true);
-            }
-            else
-            {
-                _player.transform.rotation = Quaternion.RotateTowards(_player.transform.rotation, Quaternion.Euler(0, playerRotationWhenCustomizing, 0), Time.deltaTime * 180f);
-                _playerAnimator.SetBool("isMoving", false);
-            }
+        UpdateCameraPosition();
 
-            // Prevent camera rotation
-            _playerAiming.cameraLookAt.eulerAngles = new Vector3(_playerAiming.yAxis.Value, _playerAiming.xAxis.Value, 0);
+        if (!_isPlayerMoving) return;
+        
+        MoveAndRotatePlayer();
+        PreventCameraRotation();
+    }
 
+    private void UpdateCameraPosition()
+    {
+        _vcam.GetCinemachineComponent<Cinemachine3rdPersonFollow>().ShoulderOffset = Vector3.Lerp(_vcam.GetCinemachineComponent<Cinemachine3rdPersonFollow>().ShoulderOffset, targetShoulderOffset, 1f * Time.deltaTime);
+        
+        if (Vector3.Distance(_vcam.GetCinemachineComponent<Cinemachine3rdPersonFollow>().ShoulderOffset, targetShoulderOffset) < 0.1f)
+        {
+            _isCameraMoving = false;
         }
     }
 
-    private Quaternion _oldCameraRotation;
+    private void MoveAndRotatePlayer()
+    {
+        float distance = Vector3.Distance(_player.transform.position, playerPositionWhenCustomizing);
 
+        if (distance > 0.01f)
+        {
+            MoveTowardsTarget();
+        }
+        else
+        {
+            RotateTowardsTarget();
+            if (Quaternion.Angle(_player.transform.rotation, Quaternion.Euler(0, playerRotationWhenCustomizing, 0)) < 1f)
+            {
+                _isPlayerMoving = false;
+            }
+        }
+    }
+
+    private void MoveTowardsTarget()
+    {
+        _player.transform.position = Vector3.MoveTowards(_player.transform.position, playerPositionWhenCustomizing, Time.deltaTime * 2f);
+        _player.transform.rotation = Quaternion.RotateTowards(_player.transform.rotation, Quaternion.LookRotation(playerPositionWhenCustomizing - _player.transform.position, Vector3.up), Time.deltaTime * 360f);
+        _playerAnimator.SetBool("isMoving", true);
+    }
+
+    private void RotateTowardsTarget()
+    {
+        _player.transform.rotation = Quaternion.RotateTowards(_player.transform.rotation, Quaternion.Euler(0, playerRotationWhenCustomizing, 0), Time.deltaTime * 180f);
+        _playerAnimator.SetBool("isMoving", false);
+    }
+
+    private void PreventCameraRotation()
+    {
+        _playerAiming.cameraLookAt.eulerAngles = new Vector3(_playerAiming.yAxis.Value, _playerAiming.xAxis.Value, 0);
+    }
+
+    private bool _isFirstInitialization = true;
+    
     public void Initialize()
     {
-        DestroyColorChildren();
+        if (_isFirstInitialization)
+        {
+            DestroyColorChildren();
+            BuildActiveIndexArray();
+            AssignPlayerComponents();
+            AssignButtonListeners();
+            ShowColorButtons();
+            BuildLists();
+            DisableEnabledObjects();
 
+            if (UnityEngine.Random.Range(0, 2) == 0)
+            {
+                _isMale = true;
+                SetDefaultMaleCharacter();
+            }
+            else
+            {
+                _isMale = false;
+                SetDefaultFemaleCharacter();
+            }
+            
+            SetActiveParts();
+            ActivateEnabledObjects();
+            UpdateCharacterOnServer();
+        }
+        else
+        {
+            _playerController.isCustomizing = true;
+            _isPlayerMoving = true;
+            Cursor.lockState = CursorLockMode.None;
+
+            SetOldEnabledObjects();
+        }
+
+        _isCameraMoving = true;
+
+        EnablePlayerControls();
+        EnableCanvas();
+
+    }
+
+    private void DestroyColorChildren()
+    {
+        for (int i = _skinColors.transform.childCount - 1; i >= 0; i--)
+        {
+            Transform child = _skinColors.transform.GetChild(i);
+            // code to remove the child
+            Destroy(child.gameObject);
+        }
+
+        for (int i = _hairColors.transform.childCount - 1; i >= 0; i--)
+        {
+            Transform child = _hairColors.transform.GetChild(i);
+            // code to remove the child
+            Destroy(child.gameObject);
+        }
+
+        for (int i = _eyeColors.transform.childCount - 1; i >= 0; i--)
+        {
+            Transform child = _eyeColors.transform.GetChild(i);
+            // code to remove the child
+            Destroy(child.gameObject);
+        }
+
+        for (int i = _bodyArtColors.transform.childCount - 1; i >= 0; i--)
+        {
+            Transform child = _bodyArtColors.transform.GetChild(i);
+            // code to remove the child
+            Destroy(child.gameObject);
+        }
+    }
+
+    private void BuildActiveIndexArray()
+    {
+        activePartsIndex = new int[26];
+
+        for (int i = 0; i < activePartsIndex.Length; i++)
+        {
+            activePartsIndex[i] = -1;
+        }
+    }
+    
+    private void AssignPlayerComponents()
+    {
+        //_player gets set when the player spawns
         _playerController = _player.GetComponent<PlayerController>();
         _playerAiming = _player.GetComponent<PlayerAiming>();
         _customizePlayerData = _player.GetComponent<CustomizePlayerData>();
-        GetComponent<Canvas>().enabled = true;
-
-
-        _showInventory = _player.GetComponent<ShowInventory>();
-        _playerControls = new PlayerControls();
         _playerAnimator = _player.GetComponent<Animator>();
+        _playerControls = new PlayerControls();
+        _vcam = _playerController.GetCamera().GetComponent<CinemachineVirtualCamera>();
 
+        _playerController.isCustomizing = true;
+    }
+
+    private void EnableCanvas()
+    {
+        GetComponent<Canvas>().enabled = true;
+    }
+
+    private void AssignButtonListeners()
+    {
         _maleButton.onClick.AddListener(() => { OnClickMaleButton(); });
-
         _femaleButton.onClick.AddListener(() => { OnClickFemaleButton(); });
-
         _headAllElements.onClick.AddListener(() => { OnClickHeadAllElements(); });
-
         _allHair.onClick.AddListener(() => { OnClickAll_Hair(); });
-
         _eyebrow.onClick.AddListener(() => { OnClickEyebrow(); });
-
         _facialHair.onClick.AddListener(() => { OnClickFacialHair(); });
+        _accept.onClick.AddListener(() => { SaveCustomization(); });
+    }
 
-        _accept.onClick.AddListener(() => { OnClickAccept(); });
-
-
+    private void ShowColorButtons()
+    {
         SkincolorShow();
         HaircolorShow();
         EyecolorShow();
         BodyArtcolorShow();
-
-        BuildLists();
-
-        // disable any enabled objects before clear
-        if (enabledObjects.Count != 0)
-        {
-            foreach (GameObject g in enabledObjects)
-            {
-                g.SetActive(false);
-            }
-        }
-
-        // clear enabled objects list
-
-        enabledObjects.Clear();
-
-        // set default male character
-
-        ActivateItem(male.headAllElements[0]);
-        ActivateItem(male.eyebrow[0]);
-        ActivateItem(male.facialHair[0]);
-        ActivateItem(male.torso[0]);
-        ActivateItem(male.arm_Upper_Right[0]);
-        ActivateItem(male.arm_Upper_Left[0]);
-        ActivateItem(male.arm_Lower_Right[0]);
-        ActivateItem(male.arm_Lower_Left[0]);
-        ActivateItem(male.hand_Right[0]);
-        ActivateItem(male.hand_Left[0]);
-        ActivateItem(male.hips[0]);
-        ActivateItem(male.leg_Right[0]);
-        ActivateItem(male.leg_Left[0]);
-        ActivateItem(allGender.all_Hair[0]);
-
-        //SetChildIndexList();
-        
-
-
-        _playerControls.Enable();
-
-        _playerControls.Customize.Close.started += Close;
-        // _playerControls.Customize.Close.canceled += Close;
-
-        _playerControls.Customize.MoveCamera.started += MoveCamera;
-        _playerControls.Customize.MoveCamera.canceled += MoveCamera;
-
-        _vcam = _player.GetComponent<PlayerController>().GetCamera().GetComponent<CinemachineVirtualCamera>();
-
-        // change _vcam body shoulder offset
-        _vcam.GetCinemachineComponent<Cinemachine3rdPersonFollow>().ShoulderOffset = new Vector3(0f, -1.5f, 0f);
-        
-        //enabled = false;
-
-        //FindChildObjects(_player.transform);
-        
-
-        _player.GetComponent<PlayerController>().isCustomizing = true;
-
-        _startUpdate = true;
-        //gameObject.SetActive(false);
-
-        activePartsIndex = new int[enabledObjects.Count];
-
-        for (int i = 0; i < enabledObjects.Count; i++)
-        {
-            activePartsIndex[i] = _customizePlayerData.allChildObjects.IndexOf(enabledObjects[i]);
-        }
-
-        _customizePlayerData.UpdateCharacterServerRpc(activePartsIndex);
     }
-
-    
 
     private void BuildLists()
     {
@@ -305,82 +346,124 @@ public class CustomizeUI : MonoBehaviour
 
     }
 
-    void BuildList(List<GameObject> targetList, string characterPart)
+    private void DisableEnabledObjects()
     {
-        Transform[] rootTransform = _player.transform.Find("Modular_Characters").GetComponentsInChildren<Transform>();
-        //Transform[] rootTransform = _player.GetComponentsInChildren<Transform>();
-
-        // declare target root transform
-        Transform targetRoot = null;
-
-        // find character parts parent object in the scene
-        foreach (Transform t in rootTransform)
+        if (enabledObjects.Count != 0)
         {
-            if (t.gameObject.name == characterPart)
+            foreach (GameObject g in enabledObjects)
             {
-                targetRoot = t;
-                break;
+                g.SetActive(false);
             }
+            
+            enabledObjects.Clear();
         }
-        // clears targeted list of all objects
+    }
+
+    private void SetDefaultMaleCharacter()
+    {
+        ActivateItem(male.headAllElements[0]);
+        ActivateItem(male.eyebrow[0]);
+        ActivateItem(male.facialHair[0]);
+        ActivateItem(male.torso[0]);
+        ActivateItem(male.arm_Upper_Right[0]);
+        ActivateItem(male.arm_Upper_Left[0]);
+        ActivateItem(male.arm_Lower_Right[0]);
+        ActivateItem(male.arm_Lower_Left[0]);
+        ActivateItem(male.hand_Right[0]);
+        ActivateItem(male.hand_Left[0]);
+        ActivateItem(male.hips[0]);
+        ActivateItem(male.leg_Right[0]);
+        ActivateItem(male.leg_Left[0]);
+        ActivateItem(allGender.all_Hair[0]);
+    }
+    
+    private void SetDefaultFemaleCharacter()
+    {
+        ActivateItem(female.headAllElements[0]);
+        ActivateItem(female.eyebrow[0]);
+        ActivateItem(female.torso[0]);
+        ActivateItem(female.arm_Upper_Right[0]);
+        ActivateItem(female.arm_Upper_Left[0]);
+        ActivateItem(female.arm_Lower_Right[0]);
+        ActivateItem(female.arm_Lower_Left[0]);
+        ActivateItem(female.hand_Right[0]);
+        ActivateItem(female.hand_Left[0]);
+        ActivateItem(female.hips[0]);
+        ActivateItem(female.leg_Right[0]);
+        ActivateItem(female.leg_Left[0]);
+        ActivateItem(allGender.all_Hair[0]);
+    }
+
+    private void EnablePlayerControls()
+    {
+        _playerControls.Enable();
+
+        if (!_isFirstInitialization) return;
+        
+        _playerControls.Customize.Close.started += Close;
+
+        _playerControls.Customize.MoveCamera.started += MoveCamera;
+        _playerControls.Customize.MoveCamera.canceled += MoveCamera;
+    }
+
+    private void SetOldEnabledObjects()
+    {
+
+        _oldEnabledObjects.Clear();
+
+        foreach (GameObject obj in enabledObjects)
+        {
+            _oldEnabledObjects.Add(obj);
+        }
+    }
+
+    private void UpdateCharacterOnServer()
+    {
+        _customizePlayerData.UpdateCharacterServerRpc(activePartsIndex);
+    }
+
+    private void BuildList(List<GameObject> targetList, string characterPart)
+    {
+        Transform[] rootTransforms = _player.transform.Find("Modular_Characters").GetComponentsInChildren<Transform>();
+
+        Transform targetRoot = rootTransforms.FirstOrDefault(t => t.gameObject.name == characterPart);
+
+        if (targetRoot == null)
+        {
+            return;
+        }
+
         targetList.Clear();
 
-        // cycle through all child objects of the parent object
-        for (int i = 0; i < targetRoot.childCount; i++)
+        foreach (Transform childTransform in targetRoot)
         {
-            // get child gameobject index i
-            GameObject go = targetRoot.GetChild(i).gameObject;
+            GameObject child = childTransform.gameObject;
+            child.SetActive(false);
+            targetList.Add(child);
 
-            // disable child object
-            go.SetActive(false);
-
-            // add object to the targeted object list
-            targetList.Add(go);
-
-            // collect the material for the character, only if null in the inspector;
-            if (!_mat)
+            if (!_mat && child.GetComponent<SkinnedMeshRenderer>())
             {
-                if (go.GetComponent<SkinnedMeshRenderer>())
-                    _mat = go.GetComponent<SkinnedMeshRenderer>().material;
+                _mat = child.GetComponent<SkinnedMeshRenderer>().material;
             }
         }
     }
 
     public void ActivateItem(GameObject go)
     {
-
-
         if (!enabledObjects.Contains(go))
         {
-            for (int i = 0; i < enabledObjects.Count; i++)
-            {
-                int result = string.Compare(enabledObjects[i].name, 0, go.name, 0, go.name.Length - 2);
-
-                if (result == 0)
-                {
-                    enabledObjects[i].SetActive(false);
-                    enabledObjects.Remove(enabledObjects[i]);
-                    break;
-                }
-            }
-
+            DeactivateSimilarItems(go);
             enabledObjects.Add(go);
             go.SetActive(true);
         }
     }
 
-    public void TempActivateItem(GameObject go)
+    public void ActivateTempItem(GameObject go)
     {
-        
         if (go == null)
         {
-            _tempObject.SetActive(false);
-
-            foreach (GameObject g in enabledObjects)
-            {
-                g.SetActive(true);
-            }
-
+            DeactivateTempObject();
+            ActivateEnabledObjects();
             return;
         }
 
@@ -401,7 +484,7 @@ public class CustomizeUI : MonoBehaviour
                         if (child.name == go.name)
                         {
                             _tempObject = child;
-                            
+
                             child.SetActive(true);
                             break;
                         }
@@ -411,63 +494,114 @@ public class CustomizeUI : MonoBehaviour
         }
     }
 
-    public void ChangeGender()
+    private void DeactivateSimilarItems(GameObject go)
     {
-        // disable any enabled objects before clear
-        if (enabledObjects.Count != 0)
+        int index = FindSimilarItemIndex(go);
+
+        if (index != -1)
         {
-            foreach (GameObject g in enabledObjects)
+            GameObject similarItem = enabledObjects[index];
+            similarItem.SetActive(false);
+            enabledObjects.Remove(similarItem);
+        }
+    }
+
+    private int FindSimilarItemIndex(GameObject go)
+    {
+        for (int i = 0; i < enabledObjects.Count; i++)
+        {
+            int result = string.Compare(enabledObjects[i].name, 0, go.name, 0, go.name.Length - 2);
+
+            if (result == 0)
             {
-                g.SetActive(false);
+                return i;
             }
         }
 
-        enabledObjects.Clear();
+        return -1;
+    }
 
+    private void DeactivateTempObject()
+    {
+        if (_tempObject != null)
+        {
+            _tempObject.SetActive(false);
+            _tempObject = null;
+        }
+    }
+
+    private void ActivateEnabledObjects()
+    {
+        foreach (GameObject g in enabledObjects)
+        {
+            g.SetActive(true);
+        }
+    }
+
+    public void ChangeGender()
+    {
+        List<GameObject> itemsToActivate;
 
         if (_isMale)
         {
-            ActivateItem(male.headAllElements[0]);
-            ActivateItem(male.eyebrow[0]);
-            ActivateItem(male.facialHair[0]);
-            ActivateItem(male.torso[0]);
-            ActivateItem(male.arm_Upper_Right[0]);
-            ActivateItem(male.arm_Upper_Left[0]);
-            ActivateItem(male.arm_Lower_Right[0]);
-            ActivateItem(male.arm_Lower_Left[0]);
-            ActivateItem(male.hand_Right[0]);
-            ActivateItem(male.hand_Left[0]);
-            ActivateItem(male.hips[0]);
-            ActivateItem(male.leg_Right[0]);
-            ActivateItem(male.leg_Left[0]);
-            ActivateItem(allGender.all_Hair[0]);
-
-
+            itemsToActivate = new List<GameObject>
+            {
+                male.headAllElements[0],
+                male.eyebrow[0],
+                male.facialHair[0],
+                male.torso[0],
+                male.arm_Upper_Right[0],
+                male.arm_Upper_Left[0],
+                male.arm_Lower_Right[0],
+                male.arm_Lower_Left[0],
+                male.hand_Right[0],
+                male.hand_Left[0],
+                male.hips[0],
+                male.leg_Right[0],
+                male.leg_Left[0],
+                allGender.all_Hair[0]
+            };
         }
         else
         {
-            ActivateItem(female.headAllElements[0]);
-            ActivateItem(female.eyebrow[0]);
-            ActivateItem(female.torso[0]);
-            ActivateItem(female.arm_Upper_Right[0]);
-            ActivateItem(female.arm_Upper_Left[0]);
-            ActivateItem(female.arm_Lower_Right[0]);
-            ActivateItem(female.arm_Lower_Left[0]);
-            ActivateItem(female.hand_Right[0]);
-            ActivateItem(female.hand_Left[0]);
-            ActivateItem(female.hips[0]);
-            ActivateItem(female.leg_Right[0]);
-            ActivateItem(female.leg_Left[0]);
-            ActivateItem(allGender.all_Hair[0]);
-
+            itemsToActivate = new List<GameObject>
+            {
+                female.headAllElements[0],
+                female.eyebrow[0],
+                female.torso[0],
+                female.arm_Upper_Right[0],
+                female.arm_Upper_Left[0],
+                female.arm_Lower_Right[0],
+                female.arm_Lower_Left[0],
+                female.hand_Right[0],
+                female.hand_Left[0],
+                female.hips[0],
+                female.leg_Right[0],
+                female.leg_Left[0],
+                allGender.all_Hair[0]
+            };
         }
+
+        DeactivateAllItems();
+
+        foreach (GameObject item in itemsToActivate)
+        {
+            ActivateItem(item);
+        }
+    }
+
+    private void DeactivateAllItems()
+    {
+        foreach (GameObject item in enabledObjects)
+        {
+            item.SetActive(false);
+        }
+        enabledObjects.Clear();
     }
 
     public void ChangeMaterialColor(string target, Color color)
     {
-        Debug.Log(target + " " + color);
-        
-        switch (target.ToString())
+        switch (target)
         {
             case "_Color_Skin":
                 _mat.SetColor("_Color_Skin", color);
@@ -482,10 +616,213 @@ public class CustomizeUI : MonoBehaviour
             case "_Color_BodyArt":
                 _mat.SetColor("_Color_BodyArt", color);
                 break;
-                
         }
     }
 
+    public void SaveCustomization()
+    {
+        _isFirstInitialization = false;
+
+        _isCameraMoving = true;
+
+        _playerControls.Disable();
+
+        _playerController.isCustomizing = false;
+
+        gameObject.GetComponent<Canvas>().enabled = false;
+
+        SetActiveParts();
+
+        _customizePlayerData.UpdateCharacterServerRpc(activePartsIndex);
+
+        Cursor.lockState = CursorLockMode.Locked;
+    }
+
+    private void SetActiveParts()
+    {
+        for (int i = 0; i < enabledObjects.Count; i++)
+        {
+            activePartsIndex[i] = _customizePlayerData.allChildObjects.IndexOf(enabledObjects[i]);
+        }
+    }
+
+    public void Close(InputAction.CallbackContext context)
+    {
+        if (!_playerController.isCustomizing || _isFirstInitialization) return;
+
+        if (!enabledObjects.SequenceEqual(_oldEnabledObjects))
+        {
+            if (true)
+            {
+                // ShowRevertChangesPrompt()
+                
+                enabledObjects = new List<GameObject>(_oldEnabledObjects);
+                
+                SetActiveParts();
+                
+                _customizePlayerData.UpdateCharacterServerRpc(activePartsIndex);
+            }
+            //else
+            //{
+            //    return;
+            //}
+        }
+        
+        _isCameraMoving = true;
+
+        _playerControls.Disable();
+        _playerController.isCustomizing = false;
+        Cursor.lockState = CursorLockMode.Locked;
+        gameObject.GetComponent<Canvas>().enabled = false;
+    }
+
+    //private bool ShowRevertChangesPrompt()
+    //{
+    //    // Code to show a prompt and return the result, for example:
+    //    // TODO: Update this with propper UI
+    //    return UnityEditor.EditorUtility.DisplayDialog("You got unsaved changes", "Are you sure you want to close? Unsaved customization will be reverted.", "Yes", "No");
+    //}
+
+    public void MoveCamera(InputAction.CallbackContext context)
+    {
+        if (!_playerController.isCustomizing) return;
+
+        switch (context.phase)
+        {
+            case InputActionPhase.Started:
+                Cursor.lockState = CursorLockMode.Confined;
+                break;
+            case InputActionPhase.Canceled:
+                Cursor.lockState = CursorLockMode.None;
+                break;
+        }
+    }
+
+    void OnClickMaleButton()
+    {
+        if (_isMale) return;
+
+        _facialHair.transform.GetChild(0).gameObject.SetActive(true);
+        _facialHair.GetComponent<Image>().enabled = true;
+        _facialHair.GetComponent<Button>().interactable = true;
+
+        DisableEnabledObjects();
+        SetDefaultMaleCharacter();
+
+        _isMale = true;
+        DestroyChildren();
+        ChangeGender();
+    }
+
+    void OnClickFemaleButton()
+    {
+        if (!_isMale) return;
+        
+        _facialHair.transform.GetChild(0).gameObject.SetActive(false);
+        _facialHair.GetComponent<Image>().enabled = false;
+        _facialHair.GetComponent<Button>().interactable = false;
+
+        DisableEnabledObjects();
+        SetDefaultFemaleCharacter();
+
+        _isMale = false;
+        DestroyChildren();
+        ChangeGender();
+    }
+
+    void OnClickHeadAllElements()
+    {
+        List<GameObject> elements = _isMale ? male.headAllElements : female.headAllElements;
+        InstantiateButtonsForElements(elements);
+    }
+
+    private void OnClickAll_Hair()
+    {
+        InstantiateButtonsForElements(allGender.all_Hair);
+    }
+
+    private void OnClickEyebrow()
+    {
+        List<GameObject> elements = _isMale ? male.eyebrow : female.eyebrow;
+        InstantiateButtonsForElements(elements);
+    }
+
+    private void OnClickFacialHair()
+    {
+        if (_isMale)
+            InstantiateButtonsForElements(male.facialHair);
+    }
+
+    private void InstantiateButtonsForElements(List<GameObject> elements)
+    {
+        int counter = 1;
+
+        DestroyChildren();
+
+        foreach (GameObject element in elements)
+        {
+            Button button = Instantiate(_buttonPrefab, _options.transform);
+            button.GetComponentInChildren<TextMeshProUGUI>().name = element.name;
+            button.GetComponentInChildren<TextMeshProUGUI>().text = counter.ToString();
+            button.onClick.AddListener(() => OnClickButtonElement(element));
+            counter++;
+        }
+
+        SetMouseoverOptions();
+    }
+    
+    void OnClickButtonElement(GameObject element)
+    {
+        ActivateItem(element);
+    }
+
+    private void ShowColors(string materialPropName, Color[] colors, Transform parent)
+    {
+        foreach (Color color in colors)
+        {
+            Button button = Instantiate(_colorButtonPrefab, parent);
+            button.GetComponent<Image>().color = color;
+            button.onClick.AddListener(() => { ChangeMaterialColor(materialPropName, color); });
+        }
+    }
+
+    void SkincolorShow()
+    {
+        ShowColors("_Color_Skin", colorSkin, _skinColors.transform);
+    }
+
+    void HaircolorShow()
+    {
+        ShowColors("_Color_Hair", colorHair, _hairColors.transform);
+    }
+
+    void EyecolorShow()
+    {
+        ShowColors("_Color_Eyes", colorEyes, _eyeColors.transform);
+    }
+
+    void BodyArtcolorShow()
+    {
+        ShowColors("_Color_BodyArt", colorBodyArt, _bodyArtColors.transform);
+    }
+
+    void DestroyChildren()
+    {
+        for (int i = _options.transform.childCount - 1; i >= 0; i--)
+        {
+            Transform child = _options.transform.GetChild(i);
+            // code to remove the child
+            Destroy(child.gameObject);
+        } 
+    }
+
+    void SetMouseoverOptions()
+    {
+        for (int i = 0; i < _options.transform.childCount; i++)
+        {
+            _options.transform.GetChild(i).GetComponent<MouseoverOption>().customizeUI = this;
+        }
+    }
 
     // classe for keeping the lists organized, allows for simple switching from male/female objects
     [System.Serializable]
@@ -508,8 +845,6 @@ public class CustomizeUI : MonoBehaviour
 
     }
 
-
-    
     // classe for keeping the lists organized, allows for organization of the all gender items
     [System.Serializable]
     public class CharacterObjectListsAllGender
@@ -533,364 +868,5 @@ public class CustomizeUI : MonoBehaviour
 
 
     }
-
-    public List<string> ColorTargets = new List<string>();
-
-    public void SaveCustomization()
-    {
-        GameObject.Find("QuestCustomize").GetComponent<PrototypeQuest>().QuestObjectiveUpdate(2, 0); // QUEST: Test Customization - Accept customization
-
-        _player.GetComponent<PlayerController>().isCustomizing = false;
-
-
-        Cursor.lockState = CursorLockMode.Locked;
-
-        _UI_Inventory.GetComponent<Canvas>().enabled = false;
-        _UI_Customize.GetComponent<Canvas>().enabled = false;
-        //_UI_Customize.SetActive(false);
-
-        activePartsIndex = new int[enabledObjects.Count];
-
-        for (int i = 0; i < enabledObjects.Count; i++)
-        {
-            activePartsIndex[i] = _customizePlayerData.allChildObjects.IndexOf(enabledObjects[i]);
-        }
-
-        _customizePlayerData.UpdateCharacterServerRpc(activePartsIndex);
-
-        _player.GetComponent<PlayerController>().enabled = true;
-        _player.GetComponent<PlayerAiming>().enabled = true;
-
-        _vcam.GetCinemachineComponent<Cinemachine3rdPersonFollow>().ShoulderOffset = new Vector3(.5f, -.5f, 0f);
-
-        _player.GetComponent<PlayerController>().isCustomizing = false;
-    }
-
-
-
-    public void Close(InputAction.CallbackContext context)
-    {
-        if (!_player.GetComponent<PlayerController>().isCustomizing) return;
-
-
-        //Cursor.lockState = CursorLockMode.Locked;
-
-
-        if (_player == null) return;
-
-        switch (context.phase)
-        {
-            case InputActionPhase.Started:
-
-                //GameObject.Find("QuestCustomize").GetComponent<PrototypeQuest>().QuestObjectiveUpdate(0, 1); // QUEST: Test Customization - Open/Close customization
-
-                //_UI_Inventory.GetComponent<Canvas>().enabled = false;
-                //_UI_Customize.GetComponent<Canvas>().enabled = false;
-                //_UI_Customize.SetActive(false);
-
-                //Disable();
-                break;
-        }
-    }
-
-    public void MoveCamera(InputAction.CallbackContext context)
-    {
-        if (_player == null || !_player.GetComponent<PlayerController>().isCustomizing) return;
-
-        switch (context.phase)
-        {
-            case InputActionPhase.Started:
-                Cursor.lockState = CursorLockMode.Confined;
-                break;
-            case InputActionPhase.Canceled:
-                Cursor.lockState = CursorLockMode.None;
-                break;
-        }
-    }
-
-    void OnClickMaleButton()
-    {
-        if (_isMale)
-            return;
-        
-        GameObject.Find("QuestCustomize").GetComponent<PrototypeQuest>().QuestObjectiveUpdate(1, 1); // QUEST: Test Customization - Open/Close customization
-
-        //facialHair.gameObject.SetActive(true);
-        _facialHair.transform.GetChild(0).gameObject.SetActive(true);
-        _facialHair.GetComponent<Image>().enabled = true;
-        _facialHair.GetComponent<Button>().interactable = true;
-        _isMale = true;
-        _isMale = true;
-        DestroyChildren();
-        ChangeGender();
-
-    }
-
-    void OnClickFemaleButton()
-    {
-        if (!_isMale)
-            return;
-        GameObject.Find("QuestCustomize").GetComponent<PrototypeQuest>().QuestObjectiveUpdate(1, 0); // QUEST: Test Customization - Open/Close customization
-        //facialHair.gameObject.SetActive(false);
-        _facialHair.transform.GetChild(0).gameObject.SetActive(false);
-        _facialHair.GetComponent<Image>().enabled = false;
-        _facialHair.GetComponent<Button>().interactable = false;
-        _isMale = false;
-        _isMale = false;
-        DestroyChildren();
-        ChangeGender();
-    }
-
-    void OnClickHeadAllElements()
-    {
-        int counter = 1;
-
-        DestroyChildren();
-
-        if (_isMale)
-        {
-
-            foreach (GameObject element in male.headAllElements)
-            {
-                Button button = Instantiate(_buttonPrefab, _options.transform);
-                button.GetComponentInChildren<TextMeshProUGUI>().name = element.name;
-                button.GetComponentInChildren<TextMeshProUGUI>().text = counter.ToString();
-                button.onClick.AddListener(() => { OnClickHeadElement(element); });
-                counter++;
-            }
-        }
-        else
-        {
-            foreach (GameObject element in female.headAllElements)
-            {
-                Button button = Instantiate(_buttonPrefab, _options.transform);
-                button.GetComponentInChildren<TextMeshProUGUI>().name = element.name;
-                button.GetComponentInChildren<TextMeshProUGUI>().text = counter.ToString();
-                button.onClick.AddListener(() => { OnClickHeadElement(element); });
-                counter++;
-            }
-        }
-
-        SetMouseoverOptions();
-    }
-
-    void OnClickHeadElement(GameObject element)
-    {
-        Debug.Log(element.name);
-        ActivateItem(element);
-    }
-
-    void OnClickAll_Hair()
-    {
-        int counter = 1;
-
-        DestroyChildren();
-
-        foreach (GameObject element in allGender.all_Hair)
-        {
-            Button button = Instantiate(_buttonPrefab, _options.transform);
-            button.GetComponentInChildren<TextMeshProUGUI>().name = element.name;
-            button.GetComponentInChildren<TextMeshProUGUI>().text = counter.ToString();
-            button.onClick.AddListener(() => { OnClickHairElement(element); });
-            counter++;
-        }
-
-        SetMouseoverOptions();
-    }
-
-
-    void OnClickHairElement(GameObject element)
-    {
-        ActivateItem(element);
-    }
-
-    void OnClickEyebrow()
-    {
-        int counter = 1;
-
-        DestroyChildren();
-
-        if (_isMale)
-        {
-            foreach (GameObject element in male.eyebrow)
-            {
-                Button button = Instantiate(_buttonPrefab, _options.transform);
-                button.GetComponentInChildren<TextMeshProUGUI>().name = element.name;
-                button.GetComponentInChildren<TextMeshProUGUI>().text = counter.ToString();
-                button.onClick.AddListener(() => { OnClickEyebrowElement(element); });
-                counter++;
-            }
-        }
-        else
-        {
-            foreach (GameObject element in female.eyebrow)
-            {
-                Button button = Instantiate(_buttonPrefab, _options.transform);
-                button.GetComponentInChildren<TextMeshProUGUI>().name = element.name;
-                button.GetComponentInChildren<TextMeshProUGUI>().text = counter.ToString();
-                button.onClick.AddListener(() => { OnClickEyebrowElement(element); });
-                counter++;
-            }
-        }
-
-        SetMouseoverOptions();
-    }
-
-    void OnClickEyebrowElement(GameObject element)
-    {
-        Debug.Log(element.name);
-        ActivateItem(element);
-    }
-
-
-    void OnClickFacialHair()
-    {
-        if (!_isMale)
-            return;
-
-        int counter = 1;
-
-        DestroyChildren();
-
-        foreach (GameObject element in male.facialHair)
-        {
-            Button button = Instantiate(_buttonPrefab, _options.transform);
-            button.GetComponentInChildren<TextMeshProUGUI>().name = element.name;
-            button.GetComponentInChildren<TextMeshProUGUI>().text = counter.ToString();
-            button.onClick.AddListener(() => { OnClickFacialHairElement(element); });
-            counter++;
-        }
-        
-        SetMouseoverOptions();
-    }
-
-    void OnClickFacialHairElement(GameObject element)
-    {
-        ActivateItem(element);
-    }
-
-    void OnClickAccept()
-    {
-        SaveCustomization();
-    }
-
-    void OnClickElf_Ear(bool value)
-    {
-        int counter = 1;
-
-        DestroyChildren();
-
-        foreach (GameObject element in allGender.elf_Ear)
-        {
-            Button button = Instantiate(_buttonPrefab, _options.transform);
-            button.GetComponentInChildren<TextMeshProUGUI>().name = element.name;
-            button.GetComponentInChildren<TextMeshProUGUI>().text = counter.ToString();
-            button.onClick.AddListener(() => { OnClickElf_EarElement(element); });
-            counter++;
-        }
-
-        SetMouseoverOptions();
-    }
-
-    void OnClickElf_EarElement(GameObject element)
-    {
-        Debug.Log(element.name);
-        ActivateItem(element);
-    }
-
-    void SkincolorShow()
-    {
-        foreach (Color color in colorSkin)
-        {
-            Button button = Instantiate(_colorButtonPrefab, _skinColors.transform);
-            button.GetComponent<Image>().color = color;
-            button.onClick.AddListener(() => { ChangeMaterialColor("_Color_Skin", color); });
-        }
-    }
-
-    void HaircolorShow()
-    {
-    
-        foreach (Color color in colorHair)
-        {
-            Button button = Instantiate(_colorButtonPrefab, _hairColors.transform);
-            button.GetComponent<Image>().color = color;
-            button.onClick.AddListener(() => { ChangeMaterialColor("_Color_Hair", color); });
-        }
-    }
-
-    void EyecolorShow()
-    {
-        foreach (Color color in colorEyes)
-        {
-            Button button = Instantiate(_colorButtonPrefab, _eyeColors.transform);
-            button.GetComponent<Image>().color = color;
-            button.onClick.AddListener(() => { ChangeMaterialColor("_Color_Eyes", color); });
-        }
-    }
-
-    void BodyArtcolorShow()
-    {
-        foreach (Color color in colorBodyArt)
-        {
-            Button button = Instantiate(_colorButtonPrefab, _bodyArtColors.transform);
-            button.GetComponent<Image>().color = color;
-            button.onClick.AddListener(() => { ChangeMaterialColor("_Color_BodyArt", color); });
-        }
-    }
-
-
-
-    void DestroyChildren()
-    {
-        for (int i = _options.transform.childCount - 1; i >= 0; i--)
-        {
-            Transform child = _options.transform.GetChild(i);
-            // code to remove the child
-            Destroy(child.gameObject);
-        }
-
-        
-    }
-
-    void DestroyColorChildren()
-    {
-        for (int i = _skinColors.transform.childCount - 1; i >= 0; i--)
-        {
-            Transform child = _skinColors.transform.GetChild(i);
-            // code to remove the child
-            Destroy(child.gameObject);
-        }
-
-        for (int i = _hairColors.transform.childCount - 1; i >= 0; i--)
-        {
-            Transform child = _hairColors.transform.GetChild(i);
-            // code to remove the child
-            Destroy(child.gameObject);
-        }
-
-        for (int i = _eyeColors.transform.childCount - 1; i >= 0; i--)
-        {
-            Transform child = _eyeColors.transform.GetChild(i);
-            // code to remove the child
-            Destroy(child.gameObject);
-        }
-
-        for (int i = _bodyArtColors.transform.childCount - 1; i >= 0; i--)
-        {
-            Transform child = _bodyArtColors.transform.GetChild(i);
-            // code to remove the child
-            Destroy(child.gameObject);
-        }
-    }
-
-    void SetMouseoverOptions()
-    {
-        for (int i = 0; i < _options.transform.childCount; i++)
-        {
-            _options.transform.GetChild(i).GetComponent<MouseoverOption>().customizeUI = this;
-        }
-    }
-    
 
 }

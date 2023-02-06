@@ -116,24 +116,6 @@ public partial class @PlayerControls : IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
-                },
-                {
-                    ""name"": ""Inventory"",
-                    ""type"": ""Button"",
-                    ""id"": ""22234006-bf07-4b12-9f64-81b2961c9253"",
-                    ""expectedControlType"": ""Button"",
-                    ""processors"": """",
-                    ""interactions"": """",
-                    ""initialStateCheck"": false
-                },
-                {
-                    ""name"": ""ReloadScene"",
-                    ""type"": ""Button"",
-                    ""id"": ""7c0f065d-ad07-4223-9110-87981c42edc1"",
-                    ""expectedControlType"": ""Button"",
-                    ""processors"": """",
-                    ""interactions"": """",
-                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [
@@ -290,39 +272,6 @@ public partial class @PlayerControls : IInputActionCollection2, IDisposable
                     ""action"": ""Pause"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
-                },
-                {
-                    ""name"": """",
-                    ""id"": ""a6126923-2ab2-45cb-aeae-b9389e81a040"",
-                    ""path"": ""<Keyboard>/tab"",
-                    ""interactions"": """",
-                    ""processors"": """",
-                    ""groups"": """",
-                    ""action"": ""Inventory"",
-                    ""isComposite"": false,
-                    ""isPartOfComposite"": false
-                },
-                {
-                    ""name"": """",
-                    ""id"": ""0cc1373e-7993-43e6-b9e9-06d8163094d7"",
-                    ""path"": ""<Keyboard>/i"",
-                    ""interactions"": """",
-                    ""processors"": """",
-                    ""groups"": """",
-                    ""action"": ""Inventory"",
-                    ""isComposite"": false,
-                    ""isPartOfComposite"": false
-                },
-                {
-                    ""name"": """",
-                    ""id"": ""af216b63-17be-4a7f-a86b-d430120df6e0"",
-                    ""path"": ""<Keyboard>/backquote"",
-                    ""interactions"": """",
-                    ""processors"": """",
-                    ""groups"": """",
-                    ""action"": ""ReloadScene"",
-                    ""isComposite"": false,
-                    ""isPartOfComposite"": false
                 }
             ]
         },
@@ -448,8 +397,6 @@ public partial class @PlayerControls : IInputActionCollection2, IDisposable
         m_Land_Run = m_Land.FindAction("Run", throwIfNotFound: true);
         m_Land_Look = m_Land.FindAction("Look", throwIfNotFound: true);
         m_Land_Pause = m_Land.FindAction("Pause", throwIfNotFound: true);
-        m_Land_Inventory = m_Land.FindAction("Inventory", throwIfNotFound: true);
-        m_Land_ReloadScene = m_Land.FindAction("ReloadScene", throwIfNotFound: true);
         // Customize
         m_Customize = asset.FindActionMap("Customize", throwIfNotFound: true);
         m_Customize_Close = m_Customize.FindAction("Close", throwIfNotFound: true);
@@ -527,8 +474,6 @@ public partial class @PlayerControls : IInputActionCollection2, IDisposable
     private readonly InputAction m_Land_Run;
     private readonly InputAction m_Land_Look;
     private readonly InputAction m_Land_Pause;
-    private readonly InputAction m_Land_Inventory;
-    private readonly InputAction m_Land_ReloadScene;
     public struct LandActions
     {
         private @PlayerControls m_Wrapper;
@@ -543,8 +488,6 @@ public partial class @PlayerControls : IInputActionCollection2, IDisposable
         public InputAction @Run => m_Wrapper.m_Land_Run;
         public InputAction @Look => m_Wrapper.m_Land_Look;
         public InputAction @Pause => m_Wrapper.m_Land_Pause;
-        public InputAction @Inventory => m_Wrapper.m_Land_Inventory;
-        public InputAction @ReloadScene => m_Wrapper.m_Land_ReloadScene;
         public InputActionMap Get() { return m_Wrapper.m_Land; }
         public void Enable() { Get().Enable(); }
         public void Disable() { Get().Disable(); }
@@ -584,12 +527,6 @@ public partial class @PlayerControls : IInputActionCollection2, IDisposable
                 @Pause.started -= m_Wrapper.m_LandActionsCallbackInterface.OnPause;
                 @Pause.performed -= m_Wrapper.m_LandActionsCallbackInterface.OnPause;
                 @Pause.canceled -= m_Wrapper.m_LandActionsCallbackInterface.OnPause;
-                @Inventory.started -= m_Wrapper.m_LandActionsCallbackInterface.OnInventory;
-                @Inventory.performed -= m_Wrapper.m_LandActionsCallbackInterface.OnInventory;
-                @Inventory.canceled -= m_Wrapper.m_LandActionsCallbackInterface.OnInventory;
-                @ReloadScene.started -= m_Wrapper.m_LandActionsCallbackInterface.OnReloadScene;
-                @ReloadScene.performed -= m_Wrapper.m_LandActionsCallbackInterface.OnReloadScene;
-                @ReloadScene.canceled -= m_Wrapper.m_LandActionsCallbackInterface.OnReloadScene;
             }
             m_Wrapper.m_LandActionsCallbackInterface = instance;
             if (instance != null)
@@ -624,12 +561,6 @@ public partial class @PlayerControls : IInputActionCollection2, IDisposable
                 @Pause.started += instance.OnPause;
                 @Pause.performed += instance.OnPause;
                 @Pause.canceled += instance.OnPause;
-                @Inventory.started += instance.OnInventory;
-                @Inventory.performed += instance.OnInventory;
-                @Inventory.canceled += instance.OnInventory;
-                @ReloadScene.started += instance.OnReloadScene;
-                @ReloadScene.performed += instance.OnReloadScene;
-                @ReloadScene.canceled += instance.OnReloadScene;
             }
         }
     }
@@ -728,8 +659,6 @@ public partial class @PlayerControls : IInputActionCollection2, IDisposable
         void OnRun(InputAction.CallbackContext context);
         void OnLook(InputAction.CallbackContext context);
         void OnPause(InputAction.CallbackContext context);
-        void OnInventory(InputAction.CallbackContext context);
-        void OnReloadScene(InputAction.CallbackContext context);
     }
     public interface ICustomizeActions
     {

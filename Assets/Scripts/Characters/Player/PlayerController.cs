@@ -11,17 +11,14 @@ using UnityEngine.Networking.Types;
 
 public class PlayerController : NetworkBehaviour
 {
-
     // Components
     [Header("Components")]
     private Camera _camera;
-    public GameObject _cameraFollowTarget;
-
+    private GameObject _cameraFollowTarget;
     private PlayerControls _playerControls;
     private CharacterController _controller;
     private JUFootPlacement _footPlacementScript;
     private Animator _playerAnimator;
-    private ShowInventory _showInventory;
 
     // UI
     [Header("UI")]
@@ -31,10 +28,7 @@ public class PlayerController : NetworkBehaviour
     private InventoryItemList inventoryItemList;
     private ItemPrefabList itemPrefabList;
 
-
-
     // Variables
-
     [Header("Variables")]
     [HideInInspector] public float nextAttackTime;
     [HideInInspector] public float playerStaminaRegen;
@@ -48,25 +42,17 @@ public class PlayerController : NetworkBehaviour
     public bool isTakingSurvey = false;
     public bool isPaused = false;
     public bool isInventoryOpen = false;
-
-    
-
-
-
     [HideInInspector] public string playerWeaponString = "Unarmed";
 
     [Header("UI/HUD")]
     [HideInInspector] public PauseMenuUI pauseMenuUI;
-
 
     public Vector3 moveDirection;
     public float _ySpeed;
     private readonly float _gravityValue = -9.81f;
     private readonly float _fallThreshold = 0.5f;
     private float _fallTimer = 0f;
-    
     private bool _attackLeft = true;
-    
 
     // Stats
     [Header("Stats")]
@@ -89,26 +75,21 @@ public class PlayerController : NetworkBehaviour
     Animator anim;
 
     // Check player interaction
-    
     [SerializeField] private List<GameObject> interactables = new List<GameObject>();
     [SerializeField] private LayerMask _interactableLayer;
-
     [SerializeField] private float checkDistance = 2f;
-
     [SerializeField] private GameObject interactableObject;
     [SerializeField] private Transform head;
     [SerializeField] private RaycastHit hit;
 
     private void Awake()
     {
-        enabled = false;
         _camera = Camera.main;
+        _cameraFollowTarget = transform.Find("Camera Follow Target").gameObject;
+        anim = GetComponent<Animator>();
         GetComponent<CharacterController>().enabled = false;
         GetComponent<CapsuleCollider>().enabled = false;
     }
- 
-
-    
 
     public Camera GetCamera()
     {
@@ -119,153 +100,114 @@ public class PlayerController : NetworkBehaviour
     {
         base.OnNetworkSpawn();
 
-        foreach(PlayerData player in GameObject.FindGameObjectWithTag("GameManager").GetComponent<ConnectedPlayers>()._playerList)
+        if (IsClient && IsOwner)
         {
-            
+            GetComponent<CharacterController>().enabled = true;
+
+            var cinemachineVirtualCamera = FindObjectOfType<CinemachineVirtualCamera>();
+            cinemachineVirtualCamera.Follow = _cameraFollowTarget.transform;
+
+            GameObject.FindGameObjectWithTag("UI_Customize").GetComponent<CustomizeUI>()._player = gameObject;
+            GameObject.FindGameObjectWithTag("UI_Customize").GetComponent<CustomizeUI>().Initialize();
+
+            transform.position = new Vector3(23, .55f, 7);
         }
-
-        
-
-        enabled = IsClient;
-
-        if (!IsOwner)
-        { 
-            enabled = false;
+        else
+        {
             GetComponent<CharacterController>().enabled = false;
             GetComponent<CapsuleCollider>().enabled = true;
-            return;
         }
-
-        enabled = true;
-        GetComponent<CharacterController>().enabled = true;
-
-        var cinemachineVirtualCamera = FindObjectOfType<CinemachineVirtualCamera>();
-        cinemachineVirtualCamera.Follow = _cameraFollowTarget.transform;
-
-
-        GameObject.FindGameObjectWithTag("UI_Customize").GetComponent<CustomizeUI>()._player = gameObject;
-        GameObject.FindGameObjectWithTag("UI_Customize").GetComponent<CustomizeUI>().Initialize();
-
-
-        transform.position = new Vector3(23, .55f, 7);
-
-
-        // GetComponent<CustomizeUI>().Initialize();
     }
 
-    
 
     void Start()
     {
-        
         GetComponent<PlayerAiming>().enabled = false;
         GetComponent<PlayerAiming>().enabled = true;
 
-        // Build UI
+        BuildUI();
+        InitializePlayerControls();
+        InitializeComponents();
+        InitializePlayerEvents();
+    }
+
+    private void BuildUI()
+    {
         GameObject mainUI = GameObject.Find("HUD/UI");
-        
-        //mainUI.transform.Find("UI_Customize").GetComponent<CustomizeUI>().Initialize();
-        mainUI.transform.Find("UI_Inventory").GetComponent<InventoryUI>().Initialize();
-        mainUI.transform.Find("UI_PauseMenu").GetComponent<PauseMenuUI>().Initialize();
-
         pauseMenuUI = mainUI.transform.Find("UI_PauseMenu").GetComponent<PauseMenuUI>();
+        pauseMenuUI.Initialize();
+    }
 
-
-        // Head look at direction
+    private void InitializePlayerControls()
+    {
         if (UseCameraDirection) DirectionReference = _camera.transform;
-
-        // Check player interaction
-        interactableObject = null;
-
-        // Components
         _playerControls = new PlayerControls();
+        _playerControls.Enable();
+    }
+
+    private void InitializeComponents()
+    {
+        interactableObject = null;
         _controller = GetComponent<CharacterController>();
         _playerAnimator = GetComponent<Animator>();
         _footPlacementScript = GetComponent<JUFootPlacement>();
         PlayerRunSpeed = PlayerWalkSpeed * 2f;
-        _showInventory = GetComponent<ShowInventory>();
 
         inventoryItemList = Resources.Load("InventoryItemList") as InventoryItemList;
         itemPrefabList = Resources.Load("ItemPrefabList") as ItemPrefabList;
+    }
 
-
-        // Other
-
-        _playerControls.Enable();
-
+    private void InitializePlayerEvents()
+    {
         _playerControls.Land.Move.started += Move;
         _playerControls.Land.Move.canceled += Move;
-
         _playerControls.Land.Jump.started += Jump;
         _playerControls.Land.Jump.canceled += Jump;
-
         _playerControls.Land.Use.started += Use;
         _playerControls.Land.Use.canceled += Use;
-
         _playerControls.Land.Crouch.started += Crouch;
         _playerControls.Land.Crouch.canceled += Crouch;
-
         _playerControls.Land.Prone.started += Prone;
         _playerControls.Land.Prone.canceled += Prone;
-
         _playerControls.Land.MainHand.started += MainHand;
         _playerControls.Land.MainHand.canceled += MainHand;
-
         _playerControls.Land.OffHand.started += OffHand;
         _playerControls.Land.OffHand.canceled += OffHand;
-
         _playerControls.Land.Run.started += Run;
         _playerControls.Land.Run.canceled += Run;
-
         _playerControls.Land.Pause.started += Pause;
         _playerControls.Land.Pause.canceled += Pause;
-
-        _playerControls.Land.Inventory.started += Inventory;
-        _playerControls.Land.Inventory.canceled += Inventory;
-
-        _playerControls.Land.ReloadScene.started += ReloadScene;
-        _playerControls.Land.ReloadScene.canceled += ReloadScene;
-
-        //Cursor.lockState = CursorLockMode.Locked;
-
     }
-    
 
     void Update()
     {
         if (!IsOwner) return;
+
+        if (isPaused || isCustomizing || isTakingSurvey) return;
         
-        if (isCustomizing || isTakingSurvey) return;
-        
-        _playerAnimator.SetBool("isAction", isMainhanding || isOffhanding);
-
-        _playerAnimator.SetBool("isRunning", !isMainhanding && isRunning);
-        
-        _playerAnimator.SetBool("isMoving", isMoving);
-
-        Movement();
-
-
-
-
-        // Check if player can attack
-        if (isMainhanding && Time.time > nextAttackTime)
-        {
-            //TODO: Make attack dynamic based on weapon
-            nextAttackTime = Time.time + 1f;
-
-            Attack();
-        }
-
-        // Regen health over time
-        //TODO: Add health regen
-
+        HandleAnimations();
+        HandleMovement();
+        HandleAttack();
     }
 
-    void Movement()
+    private void HandleAnimations()
     {
-        if (isPaused) return;
+        _playerAnimator.SetBool("isAction", isMainhanding || isOffhanding);
+        _playerAnimator.SetBool("isRunning", !isMainhanding && isRunning);
+        _playerAnimator.SetBool("isMoving", isMoving);
+    }
 
+    private void HandleAttack()
+    {
+        if (isMainhanding && Time.time > nextAttackTime)
+        {
+            nextAttackTime = Time.time + 1f;
+            Attack();
+        }
+    }
+
+    private void HandleMovement()
+    {
         Vector2 movement = _playerControls.Land.Move.ReadValue<Vector2>();
         Vector3 moveNew = _camera.transform.forward * movement.y + _camera.transform.right * movement.x;
         moveNew.y = 0f;
@@ -277,7 +219,6 @@ public class PlayerController : NetworkBehaviour
         {
             _footPlacementScript.EnableDynamicBodyPlacing = true;
             _footPlacementScript.SmoothIKTransition = true;
-
             _ySpeed = -0.5f;
         }
         else
@@ -286,15 +227,10 @@ public class PlayerController : NetworkBehaviour
         }
 
         moveDirection.y = _ySpeed;
-        
-
         _controller.Move(moveDirection * Time.deltaTime);
-
-        
 
         if (isOffhanding || isMainhanding)
         {
-
             transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.Euler(0, _camera.transform.eulerAngles.y, 0), 10f * Time.deltaTime);
             _playerAnimator.SetFloat("VelocityX", movement.x);
             _playerAnimator.SetFloat("VelocityZ", movement.y);
@@ -309,29 +245,23 @@ public class PlayerController : NetworkBehaviour
         CheckPlayerInteraction();
 
         isGrounded = _controller.isGrounded;
-        
-        
     }
 
-   
+
 
     private void CheckPlayerInteraction()
     {
         if (isCustomizing) return;
+
+        RaycastHit hit;
         
-        Ray ray = new Ray(head.position, gameObject.GetComponent<PlayerController>()._camera.transform.forward);
+        Ray ray = new Ray(head.position, _camera.transform.forward);
 
         if (Physics.Raycast(ray, out hit, checkDistance, _interactableLayer))
         {
-            interactableObject = hit.collider.gameObject;
-
-            interactableObject.GetComponent<Interactable>()._interactE.enabled = true;
-
-        }
-        else if (interactableObject != null && !interactableObject.GetComponent<Interactable>().showInteractE)
-        {
-            interactableObject.GetComponent<Interactable>()._interactE.enabled = false;
-            interactableObject = null;
+            Interactable interactable = hit.collider.gameObject.GetComponent<Interactable>();
+            interactable._interactE.enabled = true;
+            interactableObject = interactable.gameObject;
         }
         else
         {
@@ -341,96 +271,47 @@ public class PlayerController : NetworkBehaviour
 
     private void OnAnimatorIK(int layerIndex)
     {
-        if (isCustomizing) return;
-        
-        if (anim == null)
-            anim = GetComponent<Animator>();
+        if (!IsLocalPlayer || isCustomizing) return;
 
-        anim.SetLookAtWeight(1, SpineHeight, HeadWeight);
+        anim.SetLookAtWeight(HeadWeight, SpineHeight, 1);
         anim.SetLookAtPosition(DirectionReference.position + DirectionReference.forward * 50);
     }
 
-    void CheckIfPlayFallAnimation()
+    private void CheckIfPlayFallAnimation()
     {
         _fallTimer += Time.deltaTime;
         _playerAnimator.SetBool("isFalling", _fallTimer > _fallThreshold && !isGrounded);
         _fallTimer = isGrounded ? 0f : _fallTimer;
     }
-    
+
     public void Jump()
     {
-        if (isGrounded && !(isCustomizing || isTakingSurvey))
-        {            
-            _footPlacementScript.EnableDynamicBodyPlacing = false;
-            _footPlacementScript.SmoothIKTransition = false;
-            
-            _playerAnimator.SetAnimatorTrigger(AnimatorTrigger.JumpTrigger);
+        if (!isGrounded || isCustomizing || isTakingSurvey) return;
 
-            _ySpeed = PlayerJumpForce;
+        _footPlacementScript.EnableDynamicBodyPlacing = false;
+        _footPlacementScript.SmoothIKTransition = false;
+        
+        _playerAnimator.SetAnimatorTrigger(AnimatorTrigger.JumpTrigger);
 
-            isGrounded = false;
-        }
+        _ySpeed = PlayerJumpForce;
+
+        isGrounded = false;
     }
 
-
-
-
-
-
     private void Attack()
-    {        
+    {
         switch (playerWeaponString)
         {
             case "OneHand":
                 break;
             case "Unarmed":
-                if (isMoving)
-                {
-                    _playerAnimator.SetActionTrigger(AnimatorTrigger.AttackTrigger, _attackLeft ? 1 : 2);
-                    _attackLeft = !_attackLeft;
-                }
-                else
-                {
-                    _playerAnimator.SetActionTrigger(AnimatorTrigger.AttackTrigger, (int)Mathf.Round(UnityEngine.Random.Range(1, 6)));
-                }
+                int attackIndex = isMoving ? (_attackLeft ? 1 : 2) : Mathf.RoundToInt(UnityEngine.Random.Range(1, 6));
+                _playerAnimator.SetActionTrigger(AnimatorTrigger.AttackTrigger, attackIndex);
+                _attackLeft = !_attackLeft;
                 break;
             default:
                 _playerAnimator.SetTrigger("Attack");
                 break;
-        }
-    }
-
-    public void LootItem(Item item)
-    {
-        GameObject.Find("QuestInventory").GetComponent<PrototypeQuest>().QuestObjectiveUpdate(1, 100); // QUEST: Test Inventory - Loot something
-
-        // Check if item already in inventory
-        for (int i = 0; i < PlayerInventorySpace; i++)
-        {
-            InventoryItem tempInv = inventoryItemList.items[i].GetComponent<InventoryItem>();
-
-            if (tempInv.itemName == item.itemName && tempInv.stackSize < tempInv.maxStackSize)
-            {
-                tempInv.stackSize++;
-                tempInv.UpdateItem();
-                return;
-            } 
-        }
-
-        // Add item to inventory
-        for (int i = 0; i < PlayerInventorySpace; i++)
-        {
-            InventoryItem tempInv = inventoryItemList.items[i].GetComponent<InventoryItem>();
-
-            if (tempInv.itemName == "Empty")
-            {
-                tempInv.itemName = item.itemName;
-                tempInv.SetStackSize(item);
-                tempInv.stackSize = 1;
-                tempInv.UpdateItem();
-
-                return;
-            }
         }
     }
 
@@ -456,7 +337,7 @@ public class PlayerController : NetworkBehaviour
         if (isCustomizing || isTakingSurvey) return;
 
         //TODO: Add pause menu
-        pauseMenuUI.TogglePauseMenu();
+        pauseMenuUI.TogglePauseMenu(!isPaused);
     }
 
     public void Move(InputAction.CallbackContext context)
@@ -624,19 +505,6 @@ public class PlayerController : NetworkBehaviour
         switch (context.phase)
         {
             case InputActionPhase.Started:
-                if (isInventoryOpen)
-                {
-                    _showInventory.ToggleInventory();
-                    break;
-                }
-
-                //if (isCustomizing)
-                //{
-                //    GetComponent<PlayerCustomize>().Close(context);
-                //    isCustomizing = false;
-                //    break;
-                //}
-
                 if (isTakingSurvey)
                 {
                     GameObject.FindGameObjectWithTag("UI_Survey").GetComponent<SurveyUI>().CloseSurvey();
@@ -654,41 +522,6 @@ public class PlayerController : NetworkBehaviour
             case InputActionPhase.Canceled:
                 break;
             }
-    }
-
-    public void Inventory(InputAction.CallbackContext context)
-    {
-        if (isCustomizing || isTakingSurvey || isPaused) return;
-
-        switch (context.phase)
-        {
-            case InputActionPhase.Started:
-                
-                _showInventory.ToggleInventory();
-                break;
-
-            case InputActionPhase.Performed:
-                break;
-
-            case InputActionPhase.Canceled:
-                break;
-        }
-    }
-
-    public void ReloadScene(InputAction.CallbackContext context)
-    {
-        switch (context.phase)
-        {
-            case InputActionPhase.Started:
-                SceneManager.LoadScene("Lobby");
-                break;
-
-            case InputActionPhase.Performed:
-                break;
-
-            case InputActionPhase.Canceled:
-                break;
-        }
     }
 }
 
