@@ -29,10 +29,7 @@ public class CustomizePlayerData : NetworkBehaviour
     private void Start()
     {
         // Gets every player and run UpdatePlayerModel()
-        foreach(GameObject player in GameObject.FindGameObjectsWithTag("Player"))
-        {
-            player.GetComponent<CustomizePlayerData>().UpdatePlayerModel();
-        }
+        
     }
 
     // This is called when the player is spawned
@@ -49,6 +46,15 @@ public class CustomizePlayerData : NetworkBehaviour
             if (index == -1) continue;
 
             allChildObjects[index].SetActive(true);
+        }
+    }
+
+    [ClientRpc]
+    public void UpdatePlayerModelClientRpc()
+    {
+        foreach (GameObject player in GameObject.FindGameObjectsWithTag("Player"))
+        {
+            player.GetComponent<CustomizePlayerData>().UpdatePlayerModel();
         }
     }
 
@@ -254,7 +260,10 @@ public class CustomizePlayerData : NetworkBehaviour
                 }
             }
 
+            UpdatePlayerModelClientRpc();
         }
+
+        
     }
 
     // Called when player finish customization, serverRpcParams grabs the information about the client that called the function
@@ -265,5 +274,6 @@ public class CustomizePlayerData : NetworkBehaviour
     {
         ConstructNetworkListServerRpc(serverRpcParams.Receive.SenderClientId);
         SetNetworkListServerRpc(activePartsIndex, serverRpcParams.Receive.SenderClientId);
+        
     }
 }

@@ -1,0 +1,48 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d9a6db46ea1f40743af6eb0ed0193136, type: 3}
+  m_Name: Skybox Definition
+  m_EditorClassIdentifier: 
+  periodsOfDay:
+  - description: Night End
+    startTime: 4.24
+    horizonColor: {r: 0.018500218, g: 0.015208514, b: 0.018500218, a: 0}
+    zenithColor: {r: 0.052860655, g: 0.006512091, b: 0.057805434, a: 0}
+    groundColor: {r: 0.10461649, g: 0.088655606, b: 0.10224175, a: 0}
+  - description: Dawn
+    startTime: 6.82
+    horizonColor: {r: 0.4528302, g: 0.24195907, b: 0.087575644, a: 0}
+    zenithColor: {r: 0.103181764, g: 0.09021698, b: 0.262, a: 0}
+    groundColor: {r: 0.07008724, g: 0.07290534, b: 0.084905684, a: 0}
+  - description: Day
+    startTime: 9.1
+    horizonColor: {r: 0.48380208, g: 0.5967927, b: 0.6792453, a: 0}
+    zenithColor: {r: 0.06909563, g: 0.099198654, b: 0.23251227, a: 0}
+    groundColor: {r: 0.05660379, g: 0.045561332, b: 0.04026345, a: 0}
+  - description: Day End
+    startTime: 16.5
+    horizonColor: {r: 0.66180134, g: 0.6967497, b: 0.8301887, a: 1}
+    zenithColor: {r: 0.054512277, g: 0.13728885, b: 0.46226418, a: 0}
+    groundColor: {r: 0.056128494, g: 0.045186214, b: 0.04091521, a: 0}
+  - description: Evening
+    startTime: 17
+    horizonColor: {r: 0.6603774, g: 0.45372912, b: 0.3270737, a: 0}
+    zenithColor: {r: 0.6415094, g: 0.08170177, b: 0.08170167, a: 0}
+    groundColor: {r: 0.066037714, g: 0.040888004, b: 0.02953007, a: 0}
+  - description: Night
+    startTime: 20.54
+    horizonColor: {r: 0.084905684, g: 0.06928624, b: 0.084905684, a: 0}
+    zenithColor: {r: 0.06624117, g: 0.040227838, b: 0.0754717, a: 0}
+    groundColor: {r: 0.103773594, g: 0.08859915, b: 0.102415465, a: 0}
+  initialTime: 37.8
+  timeSystem: 37.8
+  dayNightCycleDuration: 6

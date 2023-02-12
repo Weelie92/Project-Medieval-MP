@@ -9,6 +9,9 @@ using UnityEngine.UI;
 
 public class CustomizeUI : MonoBehaviour
 {
+
+    
+
     [Header("UI Buttons")]
     [SerializeField] private Button _maleButton;
     [SerializeField] private Button _femaleButton;
@@ -114,11 +117,15 @@ public class CustomizeUI : MonoBehaviour
         }
 
         UpdateCameraPosition();
+        SelectScrollOptions();
+
 
         if (!_isPlayerMoving) return;
         
         MoveAndRotatePlayer();
         PreventCameraRotation();
+
+        // SelectOption
     }
 
     private void UpdateCameraPosition()
@@ -195,6 +202,11 @@ public class CustomizeUI : MonoBehaviour
             SetActiveParts();
             ActivateEnabledObjects();
             UpdateCharacterOnServer();
+            BuildAllHeadcoverings();
+
+            _selectOptions_Current = _selectOptions_Head;
+            ShowCustomizationOptions();
+
         }
         else
         {
@@ -209,6 +221,26 @@ public class CustomizeUI : MonoBehaviour
 
         EnablePlayerControls();
         EnableCanvas();
+
+    }
+
+    private void BuildAllHeadcoverings()
+    {
+        foreach (var x in allGender.headCoverings_Base_Hair)
+        {
+            allGender.all_headCoverings.Add(x);
+        }
+
+        foreach (var x in allGender.headCoverings_No_FacialHair)
+        {
+            allGender.all_headCoverings.Add(x);
+        }
+        
+        foreach (var x in allGender.headCoverings_No_Hair)
+        {
+            allGender.all_headCoverings.Add(x);
+        }
+
 
     }
 
@@ -275,10 +307,6 @@ public class CustomizeUI : MonoBehaviour
     {
         _maleButton.onClick.AddListener(() => { OnClickMaleButton(); });
         _femaleButton.onClick.AddListener(() => { OnClickFemaleButton(); });
-        _headAllElements.onClick.AddListener(() => { OnClickHeadAllElements(); });
-        _allHair.onClick.AddListener(() => { OnClickAll_Hair(); });
-        _eyebrow.onClick.AddListener(() => { OnClickEyebrow(); });
-        _facialHair.onClick.AddListener(() => { OnClickFacialHair(); });
         _accept.onClick.AddListener(() => { SaveCustomization(); });
     }
 
@@ -433,6 +461,8 @@ public class CustomizeUI : MonoBehaviour
             return;
         }
 
+
+
         targetList.Clear();
 
         foreach (Transform childTransform in targetRoot)
@@ -460,6 +490,8 @@ public class CustomizeUI : MonoBehaviour
 
     public void ActivateTempItem(GameObject go)
     {
+        Debug.Log(go);
+
         if (go == null)
         {
             DeactivateTempObject();
@@ -478,6 +510,20 @@ public class CustomizeUI : MonoBehaviour
 
                     enabledObjects[i].SetActive(false);
 
+                    foreach (GameObject child in _customizePlayerData.allChildObjects)
+                    {
+
+                        if (child.name == go.name)
+                        {
+                            _tempObject = child;
+
+                            child.SetActive(true);
+                            break;
+                        }
+                    }
+                }
+                else if (i == enabledObjects.Count - 1)
+                {
                     foreach (GameObject child in _customizePlayerData.allChildObjects)
                     {
 
@@ -588,6 +634,9 @@ public class CustomizeUI : MonoBehaviour
         {
             ActivateItem(item);
         }
+
+        ShowCustomizationOptions();
+
     }
 
     private void DeactivateAllItems()
@@ -676,13 +725,6 @@ public class CustomizeUI : MonoBehaviour
         gameObject.GetComponent<Canvas>().enabled = false;
     }
 
-    //private bool ShowRevertChangesPrompt()
-    //{
-    //    // Code to show a prompt and return the result, for example:
-    //    // TODO: Update this with propper UI
-    //    return UnityEditor.EditorUtility.DisplayDialog("You got unsaved changes", "Are you sure you want to close? Unsaved customization will be reverted.", "Yes", "No");
-    //}
-
     public void MoveCamera(InputAction.CallbackContext context)
     {
         if (!_playerController.isCustomizing) return;
@@ -702,10 +744,6 @@ public class CustomizeUI : MonoBehaviour
     {
         if (_isMale) return;
 
-        _facialHair.transform.GetChild(0).gameObject.SetActive(true);
-        _facialHair.GetComponent<Image>().enabled = true;
-        _facialHair.GetComponent<Button>().interactable = true;
-
         DisableEnabledObjects();
         SetDefaultMaleCharacter();
 
@@ -717,10 +755,6 @@ public class CustomizeUI : MonoBehaviour
     void OnClickFemaleButton()
     {
         if (!_isMale) return;
-        
-        _facialHair.transform.GetChild(0).gameObject.SetActive(false);
-        _facialHair.GetComponent<Image>().enabled = false;
-        _facialHair.GetComponent<Button>().interactable = false;
 
         DisableEnabledObjects();
         SetDefaultFemaleCharacter();
@@ -730,42 +764,41 @@ public class CustomizeUI : MonoBehaviour
         ChangeGender();
     }
 
-    void OnClickHeadAllElements()
-    {
-        List<GameObject> elements = _isMale ? male.headAllElements : female.headAllElements;
-        InstantiateButtonsForElements(elements);
-    }
-
-    private void OnClickAll_Hair()
-    {
-        InstantiateButtonsForElements(allGender.all_Hair);
-    }
-
-    private void OnClickEyebrow()
-    {
-        List<GameObject> elements = _isMale ? male.eyebrow : female.eyebrow;
-        InstantiateButtonsForElements(elements);
-    }
-
-    private void OnClickFacialHair()
-    {
-        if (_isMale)
-            InstantiateButtonsForElements(male.facialHair);
-    }
-
     private void InstantiateButtonsForElements(List<GameObject> elements)
     {
         int counter = 1;
+
+        
 
         DestroyChildren();
 
         foreach (GameObject element in elements)
         {
-            Button button = Instantiate(_buttonPrefab, _options.transform);
-            button.GetComponentInChildren<TextMeshProUGUI>().name = element.name;
-            button.GetComponentInChildren<TextMeshProUGUI>().text = counter.ToString();
-            button.onClick.AddListener(() => OnClickButtonElement(element));
-            counter++;
+            if (element.name.StartsWith("Chr_"))
+            {
+
+                Button button = Instantiate(_buttonPrefab, _options.transform);
+                button.GetComponentInChildren<TextMeshProUGUI>().name = element.name;
+                button.GetComponentInChildren<TextMeshProUGUI>().text = counter.ToString();
+                button.onClick.AddListener(() => OnClickButtonElement(element));
+                counter++;
+            }
+            else
+            {
+                for (int i = 0; i < element.transform.childCount; i++)
+                {
+                    GameObject childElement = element.transform.GetChild(i).gameObject;
+
+                    if (childElement.name.StartsWith("Chr_"))
+                    {
+                        Button button = Instantiate(_buttonPrefab, _options.transform);
+                        button.GetComponentInChildren<TextMeshProUGUI>().name = childElement.name;
+                        button.GetComponentInChildren<TextMeshProUGUI>().text = counter.ToString();
+                        button.onClick.AddListener(() => OnClickButtonElement(childElement));
+                        counter++;
+                    }
+                }
+            }
         }
 
         SetMouseoverOptions();
@@ -852,6 +885,7 @@ public class CustomizeUI : MonoBehaviour
         public List<GameObject> headCoverings_Base_Hair;
         public List<GameObject> headCoverings_No_FacialHair;
         public List<GameObject> headCoverings_No_Hair;
+        public List<GameObject> all_headCoverings;
         public List<GameObject> all_Hair;
         public List<GameObject> all_Head_Attachment;
         public List<GameObject> chest_Attachment;
@@ -865,8 +899,305 @@ public class CustomizeUI : MonoBehaviour
         public List<GameObject> knee_Attachement_Left;
         public List<GameObject> all_12_Extra;
         public List<GameObject> elf_Ear;
+    }
 
+
+    #region Select Area
+
+    [Header("Select Area")]
+    [SerializeField] private ScrollRect _selectScrollRect;
+    [SerializeField] private HorizontalLayoutGroup _selectOptions_Head;
+    [SerializeField] private HorizontalLayoutGroup _selectOptions_UpperBody;
+    [SerializeField] private HorizontalLayoutGroup _selectOptions_LowerBody;
+
+    private HorizontalLayoutGroup _selectOptions_Current;
+
+    [SerializeField] private float _selectOptionOffset = -270;
+    [SerializeField] private float _selectedOption = 0;
+    [SerializeField] private float _chosenCategory = 0;
+
+    public void HeadBtnClick()
+    {
+        _chosenCategory = 0;
+        _selectedOption = 0;
+
+        SelectSetcurrentOptions(0);
+
+       
+    }
+
+    public void UpBodyBtnClick()
+    {
+        _chosenCategory = 7;
+        _selectedOption = 0;
+
+        SelectSetcurrentOptions(1);
+
+        
+    }
+
+    public void LowerBodyBtnClick()
+    {
+        _chosenCategory = 19;
+        _selectedOption = 0;
+
+        SelectSetcurrentOptions(2);
+
+        
+    }
+
+    private void SelectSetcurrentOptions(int selectedOption)
+    {
+        switch (selectedOption)
+        {
+            case 0:
+                _selectOptions_Current = _selectOptions_Head;
+                break;
+            case 1:
+                _selectOptions_Current = _selectOptions_UpperBody;
+                break;
+            case 2:
+                _selectOptions_Current = _selectOptions_LowerBody;
+                break;
+        }
+
+        _selectOptions_Head.gameObject.SetActive(selectedOption == 0);
+        _selectOptions_UpperBody.gameObject.SetActive(selectedOption == 1);
+        _selectOptions_LowerBody.gameObject.SetActive(selectedOption == 2);
+
+        ShowCustomizationOptions();
+    }
+
+
+    private void SelectScrollOptions()
+    {
+        if (_selectOptions_Current.padding.left == (int)(_selectedOption * _selectOptionOffset)) return;
+
+        RectOffset tempOffset = new RectOffset(_selectOptions_Current.padding.left, _selectOptions_Current.padding.right, _selectOptions_Current.padding.top, _selectOptions_Current.padding.bottom);
+        
+        tempOffset.left = _selectOptions_Current.padding.left < (int)(_selectedOption * _selectOptionOffset) ? tempOffset.left += 10 : tempOffset.left -= 10;
+
+        _selectOptions_Current.padding = tempOffset;
+    }
+
+    private void SelectScrollOption(bool leftClick)
+    {
+
+        if (leftClick && _selectedOption == _selectOptions_Current.transform.childCount - 1 || !leftClick && _selectedOption == 0) return;
+
+        _selectedOption = leftClick ? ++_selectedOption : --_selectedOption;
+
+
+        ShowCustomizationOptions();
 
     }
+
+    private void ShowCustomizationOptions()
+    {
+        switch (_selectedOption + _chosenCategory)
+        {
+            case 0:
+                // Head
+                if (_isMale)
+                {
+                    InstantiateButtonsForElements(male.headAllElements);
+                }
+                else
+                {
+                    InstantiateButtonsForElements(female.headAllElements);
+                }
+                break;
+            case 1:
+                // Head hair
+                InstantiateButtonsForElements(allGender.all_Hair);
+                break;
+            case 2:
+                // Head eyebrows
+                if (_isMale)
+                {
+                    InstantiateButtonsForElements(male.eyebrow);
+                }
+                else
+                {
+                    InstantiateButtonsForElements(female.eyebrow);
+                }
+                break;
+            case 3:
+                // Head facial hair
+                InstantiateButtonsForElements(male.facialHair);
+                break;
+            case 4:
+                // Head coverings
+                InstantiateButtonsForElements(allGender.all_headCoverings);
+                break;
+            case 5:
+                // Head attachments
+                InstantiateButtonsForElements(allGender.all_Head_Attachment);
+                break;
+            case 6:
+                // Head elf ears
+                InstantiateButtonsForElements(allGender.elf_Ear);
+                break;
+            case 7:
+                // Upperbody Torso
+                if (_isMale)
+                {
+                    InstantiateButtonsForElements(male.torso);
+                }
+                else
+                {
+                    InstantiateButtonsForElements(female.torso);
+                }
+                break;
+            case 8:
+                // Upperbody Chest Attach
+                InstantiateButtonsForElements(allGender.back_Attachment);
+                break;
+            case 9:
+                // Upperbody shoulder R Attach
+                InstantiateButtonsForElements(allGender.shoulder_Attachment_Right);
+                break;
+            case 10:
+                // Upperbody shoulder L attach
+                InstantiateButtonsForElements(allGender.shoulder_Attachment_Left);
+                break;
+            case 11:
+                // Upperbody elbow R attach
+                InstantiateButtonsForElements(allGender.elbow_Attachment_Right);
+                break;
+            case 12:
+                // Upperbody elbow L attach
+                InstantiateButtonsForElements(allGender.elbow_Attachment_Left);
+                break;
+            case 13:
+                // Upperbody arm R up
+                if (_isMale)
+                {
+                    InstantiateButtonsForElements(male.arm_Upper_Right);
+                }
+                else
+                {
+                    InstantiateButtonsForElements(female.arm_Upper_Right);
+                }
+                break;
+            case 14:
+                // Upperbody arm L up
+                if (_isMale)
+                {
+                    InstantiateButtonsForElements(male.arm_Upper_Left);
+                }
+                else
+                {
+                    InstantiateButtonsForElements(female.arm_Upper_Left);
+                }
+                break;
+            case 15:
+                // Upperbody arm R low
+                if (_isMale)
+                {
+                    InstantiateButtonsForElements(male.arm_Lower_Right);
+                }
+                else
+                {
+                    InstantiateButtonsForElements(female.arm_Lower_Right);
+                }
+                break;
+            case 16:
+                // Upperbody arm L low
+                if (_isMale)
+                {
+                    InstantiateButtonsForElements(male.arm_Lower_Left);
+                }
+                else
+                {
+                    InstantiateButtonsForElements(female.arm_Lower_Left);
+                }
+                break;
+            case 17:
+                // Upperbody hand R
+                if (_isMale)
+                {
+                    InstantiateButtonsForElements(male.hand_Right);
+                }
+                else
+                {
+                    InstantiateButtonsForElements(female.hand_Right);
+                }
+                break;
+            case 18:
+                // Upperbody hand L
+                if (_isMale)
+                {
+                    InstantiateButtonsForElements(male.hand_Left);
+                }
+                else
+                {
+                    InstantiateButtonsForElements(female.hand_Left);
+                }
+                break;
+            case 19:
+                // Lowerbody hips attach
+                InstantiateButtonsForElements(allGender.hips_Attachment);
+                break;
+            case 20:
+                // Lowerbody knee R attach
+                InstantiateButtonsForElements(allGender.knee_Attachement_Left);
+                break;
+            case 21:
+                // Lowerbody knee L attach
+                InstantiateButtonsForElements(allGender.knee_Attachement_Right);
+                break;
+            case 22:
+                // Lowerbody hips 
+                if (_isMale)
+                {
+                    InstantiateButtonsForElements(male.hips);
+                }
+                else
+                {
+                    InstantiateButtonsForElements(female.hips);
+                }
+                break;
+            case 23:
+                // Lowerbody leg R
+                if (_isMale)
+                {
+                    InstantiateButtonsForElements(male.leg_Right);
+                }
+                else
+                {
+                    InstantiateButtonsForElements(female.leg_Right);
+                }
+                break;
+            case 24:
+                // Lowerbody leg L
+                if (_isMale)
+                {
+                    InstantiateButtonsForElements(male.leg_Left);
+                }
+                else
+                {
+                    InstantiateButtonsForElements(female.leg_Left);
+                }
+                break;
+            case 25:
+                break;
+        }
+    }
+
+    
+
+    public void ScrollRectLeft()
+    {
+        SelectScrollOption(true);
+    }
+
+    public void ScrollRectRight()
+    {
+        SelectScrollOption(false);
+    }
+
+    #endregion
+
 
 }
