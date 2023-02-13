@@ -50,8 +50,6 @@ public class CustomizeUI : MonoBehaviour
     [Header("Children/Objects")]
     [SerializeField] private ScriptableObject _allPlayerModules;
 
-    [SerializeField] private Transform _lookAt;
-
     public Vector3 cameraPositionWhenCustomizing;
     public Vector3 playerPositionWhenCustomizing;
     public float playerRotationWhenCustomizing;
@@ -188,7 +186,7 @@ public class CustomizeUI : MonoBehaviour
             BuildLists();
             DisableEnabledObjects();
 
-            if (UnityEngine.Random.Range(0, 2) == 0)
+            if (UnityEngine.Random.Range(0, 100) < 50)
             {
                 _isMale = true;
                 SetDefaultMaleCharacter();
@@ -198,14 +196,17 @@ public class CustomizeUI : MonoBehaviour
                 _isMale = false;
                 SetDefaultFemaleCharacter();
             }
-            
+
             SetActiveParts();
-            ActivateEnabledObjects();
-            UpdateCharacterOnServer();
             BuildAllHeadcoverings();
 
             _selectOptions_Current = _selectOptions_Head;
             ShowCustomizationOptions();
+
+            ActivateEnabledObjects();
+
+            UpdateCharacterOnServer();
+
 
         }
         else
@@ -490,8 +491,6 @@ public class CustomizeUI : MonoBehaviour
 
     public void ActivateTempItem(GameObject go)
     {
-        Debug.Log(go);
-
         if (go == null)
         {
             DeactivateTempObject();
@@ -682,7 +681,7 @@ public class CustomizeUI : MonoBehaviour
 
         SetActiveParts();
 
-        _customizePlayerData.UpdateCharacterServerRpc(activePartsIndex);
+        UpdateCharacterOnServer();
 
         Cursor.lockState = CursorLockMode.Locked;
     }
@@ -708,8 +707,8 @@ public class CustomizeUI : MonoBehaviour
                 enabledObjects = new List<GameObject>(_oldEnabledObjects);
                 
                 SetActiveParts();
-                
-                _customizePlayerData.UpdateCharacterServerRpc(activePartsIndex);
+
+                UpdateCharacterOnServer();
             }
             //else
             //{

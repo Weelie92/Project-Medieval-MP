@@ -4257,7 +4257,7 @@ GameObject:
   - component: {fileID: 1570063006}
   - component: {fileID: 1570063007}
   m_Layer: 0
-  m_Name: Spawn Points
+  m_Name: Spawnpoints
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -4879,7 +4879,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  GlobalObjectIdHash: 3970328439
+  GlobalObjectIdHash: 1657288704
   AlwaysReplicateAsRoot: 0
   DontDestroyWithOwner: 0
   AutoObjectParentSync: 1
@@ -5374,7 +5374,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1944516765}
   - component: {fileID: 1944516766}
-  - component: {fileID: 1944516764}
+  - component: {fileID: 1944516767}
   m_Layer: 0
   m_Name: Minigame Manager
   m_TagString: Untagged
@@ -5382,49 +5382,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &1944516764
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1944516763}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 756a132352bc1bf42817f3f10f363491, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _minigameName: 
-  _minigameDescription: 
-  _serverStartTimer: 2
-  _timer: 0
-  _minigameTeamSize: 0
-  _spawnPoints:
-  - {fileID: 348356934}
-  - {fileID: 2048429574}
-  - {fileID: 222105054}
-  - {fileID: 275459743}
-  - {fileID: 781714871}
-  - {fileID: 1779677248}
-  - {fileID: 1805568677}
-  - {fileID: 936457097}
-  - {fileID: 1991663413}
-  - {fileID: 550775580}
-  - {fileID: 1307720763}
-  - {fileID: 2022126639}
-  - {fileID: 1213455586}
-  - {fileID: 1105565147}
-  - {fileID: 1128193988}
-  - {fileID: 1623852481}
-  - {fileID: 1208497914}
-  - {fileID: 927380454}
-  - {fileID: 1562368284}
-  - {fileID: 1148031209}
-  - {fileID: 1663271495}
-  - {fileID: 1399274144}
-  - {fileID: 1908214485}
-  - {fileID: 60071870}
-  _spawnPoint: {x: 0, y: 0, z: 0}
 --- !u!4 &1944516765
 Transform:
   m_ObjectHideFlags: 0
@@ -5452,10 +5409,54 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  GlobalObjectIdHash: 245371216
+  GlobalObjectIdHash: 3712864377
   AlwaysReplicateAsRoot: 0
   DontDestroyWithOwner: 0
   AutoObjectParentSync: 1
+--- !u!114 &1944516767
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1944516763}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 22a8d594e275a8148838e4cca31d26ce, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _minigameName: 
+  _minigameDescription: 
+  _serverStartTimer: 2
+  _timer: 120
+  _minigameTeamSize: 0
+  _timerUI: {fileID: 0}
+  _spawnPoints:
+  - {fileID: 348356934}
+  - {fileID: 2048429574}
+  - {fileID: 222105054}
+  - {fileID: 275459743}
+  - {fileID: 781714871}
+  - {fileID: 1779677248}
+  - {fileID: 1805568677}
+  - {fileID: 936457097}
+  - {fileID: 1991663413}
+  - {fileID: 550775580}
+  - {fileID: 1307720763}
+  - {fileID: 2022126639}
+  - {fileID: 1213455586}
+  - {fileID: 1105565147}
+  - {fileID: 1128193988}
+  - {fileID: 1623852481}
+  - {fileID: 1208497914}
+  - {fileID: 927380454}
+  - {fileID: 1562368284}
+  - {fileID: 1148031209}
+  - {fileID: 1663271495}
+  - {fileID: 1399274144}
+  - {fileID: 1908214485}
+  - {fileID: 60071870}
+  _spawnPoint: {x: 0, y: 0, z: 0}
 --- !u!1001 &1991663412
 PrefabInstance:
   m_ObjectHideFlags: 0

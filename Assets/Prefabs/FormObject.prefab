@@ -111,12 +111,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 494bbe0f6c9157540a23df4299d3d270, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  lookAtRotation: {x: 0, y: 0, z: 0}
-  _interactE: {fileID: 6296244451257388160}
-  showInteractE: 1
-  player: {fileID: 0}
-  formSurvey: {fileID: 0}
-  URL: 
+  _cameraPositionWhenCustomizing: {x: 0, y: 0, z: 0}
+  _playerPositionWhenCustomizing: {x: 0, y: 0, z: 0}
+  _playerRotationWhenCustomizing: 0
 --- !u!1001 &3990111814952928014
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -247,16 +244,10 @@ PrefabInstance:
     - target: {fileID: 6935395500610460652, guid: 82cb555b0d68444408d4b260f61eaebd,
         type: 3}
       propertyPath: m_text
-      value: Survey
+      value: Survey survey
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 82cb555b0d68444408d4b260f61eaebd, type: 3}
---- !u!223 &6296244451257388160 stripped
-Canvas:
-  m_CorrespondingSourceObject: {fileID: 6935395499161898894, guid: 82cb555b0d68444408d4b260f61eaebd,
-    type: 3}
-  m_PrefabInstance: {fileID: 3990111814952928014}
-  m_PrefabAsset: {fileID: 0}
 --- !u!224 &6296244451257388191 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 6935395499161898897, guid: 82cb555b0d68444408d4b260f61eaebd,

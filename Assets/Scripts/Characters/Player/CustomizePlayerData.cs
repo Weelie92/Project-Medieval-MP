@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using Unity.Netcode;
 using Unity.Networking.Transport;
+using UnityEditor.Networking.PlayerConnection;
 using UnityEngine;
 using UnityEngine.Networking;
 
@@ -19,6 +20,8 @@ public class CustomizePlayerData : NetworkBehaviour
         allNetworkChildObjectsIndex = new NetworkList<int>();
 
         FindChildObjects(transform.Find("Modular_Characters"));
+
+        allNetworkChildObjectsIndex.OnListChanged += OnListChangedEvent;
     }
 
     private void OnDisable()
@@ -28,8 +31,7 @@ public class CustomizePlayerData : NetworkBehaviour
 
     private void Start()
     {
-        // Gets every player and run UpdatePlayerModel()
-        
+        UpdatePlayerModel();
     }
 
     // This is called when the player is spawned
@@ -47,15 +49,43 @@ public class CustomizePlayerData : NetworkBehaviour
 
             allChildObjects[index].SetActive(true);
         }
+
     }
 
     [ClientRpc]
     public void UpdatePlayerModelClientRpc()
     {
-        foreach (GameObject player in GameObject.FindGameObjectsWithTag("Player"))
+        if (IsLocalPlayer) return;
+
+        foreach (GameObject x in allChildObjects)
         {
-            player.GetComponent<CustomizePlayerData>().UpdatePlayerModel();
+            x.SetActive(false);
         }
+
+        foreach (int index in allNetworkChildObjectsIndex)
+        {
+            if (index == -1) continue;
+
+            allChildObjects[index].SetActive(true);
+        }
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    public void UpdatePlayerModelServerRpc()
+    {
+        foreach (GameObject x in allChildObjects)
+        {
+            x.SetActive(false);
+        }
+
+        foreach (int index in allNetworkChildObjectsIndex)
+        {
+            if (index == -1) continue;
+
+            allChildObjects[index].SetActive(true);
+        }
+
+        UpdatePlayerModelClientRpc();
     }
 
     // Find all child objects and add them to the list
@@ -80,43 +110,21 @@ public class CustomizePlayerData : NetworkBehaviour
     // When the list changes, update the player model
     private void OnListChangedEvent(NetworkListEvent<int> op)
     {
-
-        foreach (GameObject x in allChildObjects)
-        {
-            x.SetActive(false);
-        }
-
-        foreach (int index in allNetworkChildObjectsIndex)
-        {
-            if (index == -1) continue;
-
-            allChildObjects[index].SetActive(true);
-        }
+        UpdatePlayerModelServerRpc();
     }
 
-    // _ConstructNetworkListExecuted is used to prevent the NetworkList from being constructed multiple times
 
-    private bool _ConstructNetworkListExecuted;
-
+    // Constructs the new players NetworkList
     [ServerRpc(RequireOwnership = false)]
     public void ConstructNetworkListServerRpc(ulong clientId)
     {
-
-        // Prevent the NetworkList from being constructed multiple times
-
-        if (_ConstructNetworkListExecuted) return;
-
-        _ConstructNetworkListExecuted = true;
-
-        // Get the correct playerobject, using the clientId
-        
         if (NetworkManager.ConnectedClients.ContainsKey(clientId))
         {
             NetworkClient client = NetworkManager.ConnectedClients[clientId];
 
             // Grab the NetworkList from the playerobject
-
             NetworkList<int> list = client.PlayerObject.GetComponent<CustomizePlayerData>().allNetworkChildObjectsIndex;
+
 
             list.Clear();
 
@@ -130,7 +138,6 @@ public class CustomizePlayerData : NetworkBehaviour
         }
     }
 
-
     // 2nd method that runs on the server, to update the NetworkList, using the index the client sent
 
     [ServerRpc(RequireOwnership = false)]
@@ -143,9 +150,6 @@ public class CustomizePlayerData : NetworkBehaviour
 
             // Grab the NetworkList from the playerobject
             NetworkList<int> list = client.PlayerObject.GetComponent<CustomizePlayerData>().allNetworkChildObjectsIndex;
-
-            // Activate the OnListChanged event
-            list.OnListChanged += client.PlayerObject.GetComponent<CustomizePlayerData>().OnListChangedEvent;
 
             // Loop through the indexes containing the index of the selected object
             foreach (int index in indexes)
@@ -259,11 +263,7 @@ public class CustomizePlayerData : NetworkBehaviour
 
                 }
             }
-
-            UpdatePlayerModelClientRpc();
         }
-
-        
     }
 
     // Called when player finish customization, serverRpcParams grabs the information about the client that called the function
@@ -274,6 +274,5 @@ public class CustomizePlayerData : NetworkBehaviour
     {
         ConstructNetworkListServerRpc(serverRpcParams.Receive.SenderClientId);
         SetNetworkListServerRpc(activePartsIndex, serverRpcParams.Receive.SenderClientId);
-        
     }
 }

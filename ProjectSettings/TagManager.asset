@@ -16,6 +16,7 @@ TagManager:
   - Pickup
   - GameManager
   - UI_Network
+  - UI_Minigame
   layers:
   - Default
   - TransparentFX

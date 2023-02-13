@@ -6,6 +6,12 @@ public class PauseMenuUI : MonoBehaviour
     private GameObject _player;
     private Canvas _uiCanvas;
 
+
+    private void Awake()
+    {
+        DontDestroyOnLoad(transform.parent.gameObject);
+    }
+
     public void Initialize()
     {
         _player = GameObject.FindGameObjectWithTag("Player");

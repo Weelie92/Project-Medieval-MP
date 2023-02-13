@@ -42,6 +42,7 @@ public class PlayerController : NetworkBehaviour
     public bool isTakingSurvey = false;
     public bool isPaused = false;
     public bool isInventoryOpen = false;
+    public bool isChangingScene = false;
     [HideInInspector] public string playerWeaponString = "Unarmed";
 
     [Header("UI/HUD")]
@@ -85,15 +86,34 @@ public class PlayerController : NetworkBehaviour
     private void Awake()
     {
         _camera = Camera.main;
+        DontDestroyOnLoad(_camera);
+
         _cameraFollowTarget = transform.Find("Camera Follow Target").gameObject;
         anim = GetComponent<Animator>();
-        GetComponent<CharacterController>().enabled = false;
-        GetComponent<CapsuleCollider>().enabled = false;
+
+        SceneManager.sceneLoaded += OnSceneLoaded;
+    }
+
+    private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+    {
+        InitializePlayerNewScene();
+        
+    }
+
+    private void InitializePlayerNewScene()
+    {
+        isPaused = false;
+        pauseMenuUI.TogglePauseMenu();
     }
 
     public Camera GetCamera()
     {
         return _camera;
+    }
+
+    public void ChangingScene(bool isChanging)
+    {
+        isChangingScene = isChanging;
     }
 
     public override void OnNetworkSpawn()
@@ -103,6 +123,9 @@ public class PlayerController : NetworkBehaviour
         if (IsClient && IsOwner)
         {
             GetComponent<CharacterController>().enabled = true;
+            GetComponent<JUFootPlacement>().enabled = true;
+            GetComponent<PlayerAiming>().enabled = true;
+            GetComponent<CinemachineInputProvider>().enabled = true;
 
             var cinemachineVirtualCamera = FindObjectOfType<CinemachineVirtualCamera>();
             cinemachineVirtualCamera.Follow = _cameraFollowTarget.transform;
@@ -116,7 +139,13 @@ public class PlayerController : NetworkBehaviour
         {
             GetComponent<CharacterController>().enabled = false;
             GetComponent<CapsuleCollider>().enabled = true;
+            //enabled = false;
         }
+    }
+
+    private void OnDisable()
+    {
+        SceneManager.sceneLoaded -= OnSceneLoaded;
     }
 
 
@@ -141,6 +170,7 @@ public class PlayerController : NetworkBehaviour
     private void InitializePlayerControls()
     {
         if (UseCameraDirection) DirectionReference = _camera.transform;
+
         _playerControls = new PlayerControls();
         _playerControls.Enable();
     }
@@ -183,7 +213,7 @@ public class PlayerController : NetworkBehaviour
     {
         if (!IsOwner) return;
 
-        if (isPaused || isCustomizing || isTakingSurvey) return;
+        if (isCustomizing || isTakingSurvey || isChangingScene) return;
         
         HandleAnimations();
         HandleMovement();
@@ -272,6 +302,8 @@ public class PlayerController : NetworkBehaviour
     private void OnAnimatorIK(int layerIndex)
     {
         if (!IsLocalPlayer || isCustomizing) return;
+
+        DirectionReference = _camera.transform;
 
         anim.SetLookAtWeight(HeadWeight, SpineHeight, 1);
         anim.SetLookAtPosition(DirectionReference.position + DirectionReference.forward * 50);
@@ -507,7 +539,7 @@ public class PlayerController : NetworkBehaviour
             case InputActionPhase.Started:
                 if (isTakingSurvey)
                 {
-                    GameObject.FindGameObjectWithTag("UI_Survey").GetComponent<SurveyUI>().CloseSurvey();
+                    GameObject.Find("BugReportManager").GetComponent<BugReportManager>().CloseBugReport();
                     break;
                 }
         

@@ -15,6 +15,8 @@ public class BugReportManager : MonoBehaviour
 
     private void Awake()
     {
+        DontDestroyOnLoad(this.gameObject);
+
         bugReportMenu.SetActive(false);
     }
     

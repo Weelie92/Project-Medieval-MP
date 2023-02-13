@@ -1,4 +1,4 @@
-using System.Collections;
+ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -15,22 +15,19 @@ public class LookAtCam : MonoBehaviour
 
     void Update()
     {
-        colliders = Physics.OverlapSphere(transform.position, 3f, LayerMask.GetMask("Player"));
+        colliders = Physics.OverlapSphere(transform.position, 7f, LayerMask.GetMask("Player"));
 
         if (colliders.Length > 0)
         {
             foreach (Collider collider in colliders)
             {
-                if (collider.gameObject.tag == "Player")
+                if (collider.gameObject.CompareTag("Player"))
                 {
                     GetComponent<Canvas>().enabled = true;
-                    _cameraToLookAt = collider.gameObject.GetComponentInChildren<Camera>();
                 }
             }
 
-            if (_cameraToLookAt == null) return;
-
-            transform.LookAt(_cameraToLookAt.transform.position);
+            transform.LookAt(Camera.main.transform.position);
             transform.Rotate(0, 180, 0);
         }
         else

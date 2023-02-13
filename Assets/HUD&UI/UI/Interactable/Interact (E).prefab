@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 6935395499161898895}
   - component: {fileID: 6935395499161898892}
   - component: {fileID: 824918881}
-  m_Layer: 5
+  m_Layer: 11
   m_Name: Interact (E)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -114,6 +114,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d8deacc26aa315a45a3cbb6654b53d5f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  colliders: []
 --- !u!1 &6935395500610460650
 GameObject:
   m_ObjectHideFlags: 0
@@ -125,7 +126,7 @@ GameObject:
   - component: {fileID: 6935395500610460653}
   - component: {fileID: 6935395500610460655}
   - component: {fileID: 6935395500610460652}
-  m_Layer: 5
+  m_Layer: 11
   m_Name: Text (TMP)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
