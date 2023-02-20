@@ -67,8 +67,10 @@ public class ThirdPersonCameraController : MonoBehaviour
     {
 		//Camera Collision
 		RaycastHit hit;
+
 		Vector3 start = Target.transform.position + Target.transform.up * CameraHeight;
 		Vector3 end = Target.transform.position + Target.transform.up * CameraHeight - transform.forward * CurrentDistance + transform.right * PositionX + transform.up * PositionY;
+
 		if (Physics.Linecast(start, end, out hit, CameraCollisionLayer))
 		{
 			CurrentDistance = Vector3.Distance(start, hit.point);

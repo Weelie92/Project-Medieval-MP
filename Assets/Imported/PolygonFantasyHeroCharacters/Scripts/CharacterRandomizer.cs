@@ -152,27 +152,6 @@ namespace PsychoticLab
                 InvokeRepeating("Randomize", shuffleSpeed, shuffleSpeed);
         }
 
-        private void Update()
-        {
-            //if (camHolder)
-            //{
-            //    if (Input.GetKey(KeyCode.Mouse1))
-            //    {
-            //        x += 1 * Input.GetAxis("Mouse X");
-            //        y -= 1 * Input.GetAxis("Mouse Y");
-            //        Cursor.lockState = CursorLockMode.Locked;
-            //        Cursor.visible = false;
-            //    }
-            //    else
-            //    {
-            //        x -= 1 * Input.GetAxis("Horizontal");
-            //        y -= 1 * Input.GetAxis("Vertical");
-            //        Cursor.lockState = CursorLockMode.None;
-            //        Cursor.visible = true;
-            //    }
-            //}
-        }
-
         void LateUpdate()
         {
             // method for handling the camera rotation around the character

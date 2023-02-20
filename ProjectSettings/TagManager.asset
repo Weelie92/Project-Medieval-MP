@@ -17,6 +17,8 @@ TagManager:
   - GameManager
   - UI_Network
   - UI_Minigame
+  - MinigameManager
+  - UI_ScoreBoard
   layers:
   - Default
   - TransparentFX
