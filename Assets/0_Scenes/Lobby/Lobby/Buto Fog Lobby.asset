@@ -26,7 +26,7 @@ MonoBehaviour:
     m_OverrideState: 1
     m_Value: 1
   selfShadowingEnabled:
-    m_OverrideState: 0
+    m_OverrideState: 1
     m_Value: 0
   maximumSelfShadowingOctaves:
     m_OverrideState: 0
@@ -36,7 +36,7 @@ MonoBehaviour:
     m_Value: 0
   maxDistanceVolumetric:
     m_OverrideState: 0
-    m_Value: 128
+    m_Value: 46.8
   analyticFogEnabled:
     m_OverrideState: 1
     m_Value: 0
@@ -51,7 +51,7 @@ MonoBehaviour:
     m_Value: 0.092
   fogDensity:
     m_OverrideState: 1
-    m_Value: 25
+    m_Value: 40
   anisotropy:
     m_OverrideState: 1
     m_Value: 0.1
@@ -63,9 +63,9 @@ MonoBehaviour:
     m_Value: 1
   baseHeight:
     m_OverrideState: 0
-    m_Value: 0
+    m_Value: 10
   attenuationBoundarySize:
-    m_OverrideState: 1
+    m_OverrideState: 0
     m_Value: 3
   litColor:
     m_OverrideState: 0
@@ -111,7 +111,7 @@ MonoBehaviour:
     m_Value: {x: 0, y: 0, z: 1}
   noiseMap:
     m_OverrideState: 1
-    m_Value: {x: 0.3, y: 1}
+    m_Value: {x: 0.3994819, y: 1}
   volumeNoise:
     m_OverrideState: 1
     m_Value:
@@ -121,7 +121,7 @@ MonoBehaviour:
       gain: 0.35
       seed: 0
       noiseType: 2
-      noiseQuality: 2
+      noiseQuality: 0
       invert: 0
       userTexture: {fileID: 0}
 --- !u!114 &11400000

@@ -7,11 +7,18 @@ using UnityEngine;
 
 public class MG_UI_Timer : MonoBehaviour
 {
+    public static MG_UI_Timer Instance;
+
     public TextMeshProUGUI timerText;
     
     [SerializeField] float _growTimer = .5f;
     [SerializeField] float _shrinkTimer = 0.3f;
     [SerializeField] Vector3 _oldPos;
+
+    private void Awake()
+    {
+        Instance = this;
+    }
 
     private void Start()
     {

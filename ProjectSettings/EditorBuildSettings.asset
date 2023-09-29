@@ -6,15 +6,21 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/0_Scenes/MainMenu/MainMenu.unity
-    guid: 0e395a891fb7c674a9613265cfc49460
+    path: Assets/0_Scenes/Lobby/LobbyScene.unity
+    guid: 5919ba57431ebd74fb163dfd9cb2ee55
   - enabled: 1
-    path: Assets/0_Scenes/Prototype/Prototype.unity
-    guid: 06b7d0a4f6745a14d83b25cc78e1c377
+    path: Assets/0_Scenes/Lobby/LobbyReadyScene.unity
+    guid: a36568e4b4bd93142aaab91f6d60e1b3
   - enabled: 1
-    path: Assets/0_Scenes/Lobby/Lobby.unity
+    path: Assets/0_Scenes/Lobby/GameScene.unity
     guid: 939c02ed3b99fff40bfff4c4cc2e7cbc
   - enabled: 1
     path: Assets/0_Scenes/Minigames/1v1v1v1/MG_PlatformJump/MG_PlatformJump.unity
     guid: 5083b491ae8777746ad0493f5edc5390
+  - enabled: 1
+    path: Assets/0_Scenes/MainMenu/MainMenu.unity
+    guid: 0e395a891fb7c674a9613265cfc49460
+  - enabled: 1
+    path: Assets/0_Scenes/Minigames/1v1v1v1/MG_PlatformJump/MG_Race.unity
+    guid: df1f68e70d51d7644bddffbfb16c8455
   m_configObjects: {}

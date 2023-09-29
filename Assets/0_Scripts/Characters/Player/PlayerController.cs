@@ -7,21 +7,37 @@ using UnityEngine.InputSystem;
 using System.Collections.Generic;
 using Cinemachine;
 using System;
-using UnityEngine.Networking.Types;
 using RPGCharacterAnims.Actions;
 using System.Collections;
+using PsychoticLab;
 
-public class PlayerController : NetworkBehaviour, IKillable, IKnockbackable
+public class PlayerController : NetworkBehaviour, IKillable
 {
+    public static PlayerController LocalInstance { get; private set; }
+
+
+    public static event EventHandler OnAnyPlayerSpawned;
+
+    public List<AudioClip> footstepSounds;
+    public List<AudioClip> jumpSounds;
+    public List<AudioClip> landSounds;
+    public List<AudioClip> damageSounds;
+    public List<AudioClip> attackSounds;
+    public List<AudioClip> victorySounds;
+    public List<AudioClip> lossSounds;
+
+
+    [SerializeField] private AudioSource audioSource;
+
     // Components
     [Header("Components")]
     private Camera _camera;
     private GameObject _cameraFollowTarget;
     private PlayerControls _playerControls;
     //private CharacterController _playerController;
-    [SerializeField] private Rigidbody _playerRigidbody;
+    [SerializeField] public Rigidbody _playerRigidbody;
     private JUFootPlacement _footPlacementScript;
-    private Animator _playerAnimator;
+    public Animator _playerAnimator;
 
     // UI
     [Header("UI")]
@@ -33,24 +49,27 @@ public class PlayerController : NetworkBehaviour, IKillable, IKnockbackable
 
     // Variables
     [Header("Variables")]
-    [HideInInspector] public float nextAttackTime;
-    [HideInInspector] public float playerStaminaRegen;
-    [HideInInspector] public bool isMoving = false;
-    [HideInInspector] public bool isRunning = false;
+    public bool allowMovement = true;
+    public float nextAttackTime;
+    public float playerStaminaRegen;
+    public bool isMoving = false;
+    public bool isRunning = false;
     public bool isJumping = false;
     public bool isGrounded = true;
-    [HideInInspector] public bool isOffhanding = false;
-    [HideInInspector] public bool isMainhanding = false;
-    [HideInInspector] public bool isCustomizing = false;
-    [HideInInspector] public bool isTakingSurvey = false;
-    [HideInInspector] public bool isPaused = false;
-    [HideInInspector] public bool isInventoryOpen = false;
-    [HideInInspector] public bool isChangingScene = false;
-    [HideInInspector] public bool isAlive = true;
-    [HideInInspector] public string playerWeaponString = "Unarmed";
+    public bool isOffhanding = false;
+    public bool isMainhanding = false;
+    public bool isCustomizing = false;
+    public bool isTakingSurvey = false;
+    public bool isPaused = false;
+
+    public bool isInventoryOpen = false;
+    //public bool isChangingScene = false;
+    public bool isAlive = true;
+    public string playerWeaponString = "Unarmed";
+
 
     [Header("UI/HUD")]
-    [HideInInspector] public PauseMenuUI pauseMenuUI;
+    //[HideInInspector] public PauseMenuUI pauseMenuUI;
     [SerializeField] private GameObject _scoreBoardUI;
 
     [HideInInspector] public Vector3 moveDirection;
@@ -94,18 +113,16 @@ public class PlayerController : NetworkBehaviour, IKillable, IKnockbackable
     [SerializeField] private CapsuleCollider[] _ragdollCapsuleColliders;
     [SerializeField] private SphereCollider[] _ragdollSphereColliders;
 
-    public bool isKnockbackable;
-
-    public bool CanBeKnockedBack
-    {
-        get => isKnockbackable;
-        set => isKnockbackable = value;
-    }
+    
 
 
     private void Awake()
     {
+
         _camera = Camera.main;
+
+        //DontDestroyOnLoad(gameObject);
+
 
         _scoreBoardUI = GameObject.FindGameObjectWithTag("UI_ScoreBoard");
 
@@ -115,39 +132,56 @@ public class PlayerController : NetworkBehaviour, IKillable, IKnockbackable
         _ragdollBoxColliders = transform.Find("Root").GetComponentsInChildren<BoxCollider>();
         _ragdollCapsuleColliders = transform.Find("Root").GetComponentsInChildren<CapsuleCollider>();
         _ragdollSphereColliders = transform.Find("Root").GetComponentsInChildren<SphereCollider>();
-        // FIX ME
-        // DisableRagdoll();
+       
+        DisableRagdoll();
 
         _cameraFollowTarget = transform.Find("Camera Follow Target").gameObject;
         anim = GetComponent<Animator>();
 
-        isKnockbackable = false;
 
         SceneManager.sceneLoaded += OnSceneLoaded;
     }
 
-    void Start()
+
+
+    private IEnumerator Start()
     {
-        GetComponent<PlayerAiming>().enabled = false;
-        GetComponent<PlayerAiming>().enabled = true;
+        if (IsOwner)
+        {
+            GetComponent<PlayerAiming>().enabled = false;
+            GetComponent<PlayerAiming>().enabled = true;
 
-        MinigameScoreTracker.Instance.AddPlayerServerRpc(NetworkObject.OwnerClientId);
+            CustomizeUI.Instance.InitializePlayerUI(GetComponent<NetworkObject>());
+            PauseMenuUI.Instance.InitializePlayerUI(GetComponent<NetworkObject>());
 
+            BuildUI();
+            InitializePlayerControls();
+            InitializeComponents();
+            InitializePlayerEvents();
 
-        BuildUI();
-        InitializePlayerControls();
-        InitializeComponents();
-        InitializePlayerEvents();
+            MinigameScoreTracker.Instance.AddPlayerServerRpc(NetworkObject.OwnerClientId);
+
+            yield return new WaitForSeconds(1f);
+            CustomizeUI.Instance.ActivateEnabledObjects();
+            LoadingHUD.Instance.ToggleFade(false);
+
+            transform.position = new Vector3(22, 0.7f, 7);
+
+            GetComponent<CharacterRandomizer>().Randomize();
+        }
+        _playerAnimator = GetComponent<Animator>();
+
     }
+
 
     void FixedUpdate()
     {
+
         if (!IsOwner) return;
 
-        if (isCustomizing || isTakingSurvey || isChangingScene) return;
+        if (isCustomizing) return;
 
         HandleMovement();
-
         HandleAnimations();
         HandleAttack();
     }
@@ -156,20 +190,27 @@ public class PlayerController : NetworkBehaviour, IKillable, IKnockbackable
     {
         if (!IsOwner) return;
 
-        if (isCustomizing || isTakingSurvey || isChangingScene) return;
+        if (isCustomizing) return;
 
-        
+
 
         CheckIfPlayFallAnimation();
 
         CheckPlayerInteraction();
 
-        if (Input.GetKeyDown(KeyCode.I)) Revive();
-        if (Input.GetKeyDown(KeyCode.K)) Kill();
+        if (Input.GetKeyDown(KeyCode.I)) ReviveServerRpc(NetworkObject.OwnerClientId);
+        if (Input.GetKeyDown(KeyCode.K)) KillServerRpc(NetworkObject.OwnerClientId);
     }
+
+    public Transform _ragdollPelvisTransform;
 
     private void DisableRagdoll()
     {
+        Vector3 ragdollPosition = _ragdollPelvisTransform.position;
+        Quaternion ragdollRotation = _ragdollPelvisTransform.rotation;
+
+        transform.position = _ragdollPelvisTransform.position;
+
         _playerRigidbody.isKinematic = false;
 
         foreach (var rb in _ragdollRigidbodies)
@@ -177,9 +218,9 @@ public class PlayerController : NetworkBehaviour, IKillable, IKnockbackable
             rb.isKinematic = true;
         }
 
-
-
         GetComponent<CapsuleCollider>().enabled = true;
+
+
 
         foreach (var col in _ragdollBoxColliders)
         {
@@ -195,19 +236,22 @@ public class PlayerController : NetworkBehaviour, IKillable, IKnockbackable
         {
             col.enabled = false;
         }
+
+        transform.position = ragdollPosition;
+        transform.rotation = ragdollRotation;
     }
 
-    private void EnableRagdoll()
+
+    public void EnableRagdoll()
     {
+        Vector3 playerVelocity = _playerRigidbody.velocity;
 
         foreach (var rb in _ragdollRigidbodies)
         {
             rb.isKinematic = false;
+            rb.velocity = playerVelocity;
         }
 
-        _playerRigidbody.isKinematic = true;
-
-        GetComponent<CapsuleCollider>().enabled = false;
 
         foreach (var col in _ragdollBoxColliders)
         {
@@ -225,38 +269,111 @@ public class PlayerController : NetworkBehaviour, IKillable, IKnockbackable
         }
     }
 
+
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
-        if (scene.name == "Lobby") transform.position = new Vector3(23, .55f, 7);
+
+        if (scene.name == "GameScene") transform.position = new Vector3(23, .55f, 7);
 
 
-        InitializePlayerNewScene();
-        Revive();
     }
 
-    private void InitializePlayerNewScene()
+
+    public void PlayFootstepSound()
     {
-        isPaused = false;
-        pauseMenuUI.TogglePauseMenu(isPaused);
+        int randomIndex = UnityEngine.Random.Range(0, footstepSounds.Count);
+        AudioClip selectedClip = footstepSounds[randomIndex];
+        audioSource.PlayOneShot(selectedClip);
     }
+
+    public void JumpSound()
+    {
+        int randomIndex = UnityEngine.Random.Range(0, jumpSounds.Count);
+        AudioClip selectedClip = jumpSounds[randomIndex];
+        audioSource.volume = 0.5f;
+        audioSource.PlayOneShot(selectedClip);
+        audioSource.volume = 1f;
+    }
+
+    private bool canPlayLandSound = true;
+    private float landSoundCooldown = 1f;
+
+    public void LandSound()
+    {
+        if (!canPlayLandSound)
+            return;
+
+        int randomIndex = UnityEngine.Random.Range(0, landSounds.Count);
+        AudioClip selectedClip = landSounds[randomIndex];
+        audioSource.PlayOneShot(selectedClip);
+
+        canPlayLandSound = false;
+        StartCoroutine(StartLandSoundCooldown());
+    }
+
+    private IEnumerator StartLandSoundCooldown()
+    {
+        yield return new WaitForSeconds(landSoundCooldown);
+        canPlayLandSound = true;
+    }
+
+    public void DamageTakenSound()
+    {
+        int randomIndex = UnityEngine.Random.Range(0, damageSounds.Count);
+        AudioClip selectedClip = damageSounds[randomIndex];
+        audioSource.PlayOneShot(selectedClip);
+    }
+
+    public void AttackSound()
+    {
+        int randomIndex = UnityEngine.Random.Range(0, attackSounds.Count);
+        AudioClip selectedClip = attackSounds[randomIndex];
+        audioSource.PlayOneShot(selectedClip);
+    }
+
+    public void VictorySound()
+    {
+        Debug.Log("Victory");
+        int randomIndex = UnityEngine.Random.Range(0, victorySounds.Count);
+        AudioClip selectedClip = victorySounds[randomIndex];
+        audioSource.PlayOneShot(selectedClip);
+    }
+
+    public void LossSound()
+    {
+        Debug.Log("Loss");
+        int randomIndex = UnityEngine.Random.Range(0, lossSounds.Count);
+        AudioClip selectedClip = lossSounds[randomIndex];
+        audioSource.PlayOneShot(selectedClip);
+    }
+
 
     public Camera GetCamera()
     {
+        if (_camera == null) _camera = Camera.main;
+
         return _camera;
     }
 
-    public void ChangingScene(bool isChanging)
+    public void MovePlayerToScene(Scene targetScene)
     {
-        isChangingScene = isChanging;
+        SceneManager.MoveGameObjectToScene(gameObject, targetScene);
     }
+
 
     public override void OnNetworkSpawn()
     {
-        base.OnNetworkSpawn();
+
+        if (IsOwner)
+        {
+            LocalInstance = this;
+        }
+
+
 
         if (IsClient && IsOwner)
         {
-            //GetComponent<CharacterController>().enabled = true;
+
             GetComponent<JUFootPlacement>().enabled = true;
             GetComponent<PlayerAiming>().enabled = true;
             GetComponent<CinemachineInputProvider>().enabled = true;
@@ -264,8 +381,8 @@ public class PlayerController : NetworkBehaviour, IKillable, IKnockbackable
             var cinemachineVirtualCamera = FindObjectOfType<CinemachineVirtualCamera>();
             cinemachineVirtualCamera.Follow = _cameraFollowTarget.transform;
 
-            GameObject.FindGameObjectWithTag("UI_Customize").GetComponent<CustomizeUI>()._player = gameObject;
-            GameObject.FindGameObjectWithTag("UI_Customize").GetComponent<CustomizeUI>().Initialize();
+            
+
 
             Cursor.lockState = CursorLockMode.None;
             transform.position = new Vector3(23, .55f, 7);
@@ -273,10 +390,10 @@ public class PlayerController : NetworkBehaviour, IKillable, IKnockbackable
         }
         else
         {
-            //GetComponent<CharacterController>().enabled = false;
-            //GetComponent<CapsuleCollider>().enabled = true;
+            //GetComponent<PlayerController>().enabled = false;
+            GetComponent<CapsuleCollider>().enabled = true;
 
-            //enabled = false;
+            enabled = false;
         }
 
     }
@@ -296,41 +413,55 @@ public class PlayerController : NetworkBehaviour, IKillable, IKnockbackable
 
 
 
+    [ServerRpc]
+    public void KillServerRpc(ulong clientId)
+    {
+
+        //EnableRagdoll();
+
+        // Notify the targeted client that it has been killed
+        KillClientRpc(clientId);
+    }
+
+
     [ClientRpc]
     public void KillClientRpc(ulong clientId)
     {
-        if (clientId != NetworkObject.OwnerClientId) return;
+        if (NetworkObject.OwnerClientId == clientId)
+        {
 
-        Kill();
+            isAlive = false;
+            GetComponent<Animator>().enabled = false;
+
+            EnableRagdoll();
+        }
     }
 
-    public void Kill()
+    [ServerRpc(RequireOwnership = false)]
+    public void ReviveServerRpc(ulong clientId)
     {
-        isAlive = false;
-
-        GetComponent<Animator>().enabled = false;
-        // FIX ME
-        // EnableRagdoll();
+        ReviveClientRpc(clientId);
     }
 
-    public void Revive()
+    [ClientRpc]
+    public void ReviveClientRpc(ulong clientId)
     {
-        isAlive = true;
-        GetComponent<Animator>().enabled = true;
-        //GetComponent<CharacterController>().enabled = true;
+        if (clientId == NetworkObject.OwnerClientId)
+        {
+            DisableRagdoll();
 
-        // Reset the rotation of the player
-        transform.rotation = Quaternion.identity;
+            GetComponent<Animator>().enabled = true;
+            GetComponent<Animator>().SetTrigger("GetUp");
 
-        // FIX ME
-        // DisableRagdoll();
+            StartCoroutine(EnableMovementAfterDelay(.9f));
+        }
     }
+
 
     private void BuildUI()
     {
-        GameObject mainUI = GameObject.Find("HUD/UI");
-        pauseMenuUI = mainUI.transform.Find("UI_PauseMenu").GetComponent<PauseMenuUI>();
-        pauseMenuUI.Initialize();
+        GameObject mainUI = GameObject.FindGameObjectWithTag("MainUI");
+
     }
 
     private void InitializePlayerControls()
@@ -344,13 +475,10 @@ public class PlayerController : NetworkBehaviour, IKillable, IKnockbackable
     private void InitializeComponents()
     {
         interactableObject = null;
-        //_playerController = GetComponent<CharacterController>();
         _playerAnimator = GetComponent<Animator>();
         _footPlacementScript = GetComponent<JUFootPlacement>();
         PlayerRunSpeed = PlayerWalkSpeed * 2f;
 
-        inventoryItemList = Resources.Load("InventoryItemList") as InventoryItemList;
-        itemPrefabList = Resources.Load("ItemPrefabList") as ItemPrefabList;
     }
 
     private void InitializePlayerEvents()
@@ -379,8 +507,12 @@ public class PlayerController : NetworkBehaviour, IKillable, IKnockbackable
 
     
 
+    
+
     private void HandleAnimations()
     {
+        if (!isAlive) return;
+
         _playerAnimator.SetBool("isAction", isMainhanding || isOffhanding);
         _playerAnimator.SetBool("isRunning", !isMainhanding && isRunning);
         _playerAnimator.SetBool("isMoving", isMoving);
@@ -388,7 +520,7 @@ public class PlayerController : NetworkBehaviour, IKillable, IKnockbackable
 
     private void HandleAttack()
     {
-        if (!isAlive) return;
+        if (!isAlive || isPaused) return;
 
         if (isMainhanding && Time.time > nextAttackTime)
         {
@@ -410,49 +542,64 @@ public class PlayerController : NetworkBehaviour, IKillable, IKnockbackable
     private float _currentSpeed = 0f;
     private Vector3 _moveDirection = Vector3.zero;
 
+
+    [ClientRpc]
+    public void SetAllowMovementClientRpc(bool isEnabled)
+    {
+        allowMovement = isEnabled;
+    }
+
     private void HandleMovement()
     {
-        if (!isAlive) return;
+        if (!isAlive || !allowMovement || _isBeingKnockedBack) return;
 
-        Vector2 movement = _playerControls.Land.Move.ReadValue<Vector2>();
-        Vector3 moveNew = _camera.transform.forward * movement.y + _camera.transform.right * movement.x;
-        moveNew.y = 0f;
-        moveNew = moveNew.normalized;
+        if (_playerControls == null)
+        {
+            _playerControls = new PlayerControls();
+            _playerControls.Enable();
+        }
+
+        Vector2 movementInput = _playerControls.Land.Move.ReadValue<Vector2>().normalized;
+
+        if (_camera == null)
+        {
+            
+            _camera = Camera.main;
+        
+        }
+
+        Vector3 moveDirection = _camera.transform.forward * movementInput.y + _camera.transform.right * movementInput.x;
+        moveDirection.y = 0f;
+        moveDirection = moveDirection.normalized;
 
         float targetSpeed = _movementSpeed;
         if (isRunning && !isMainhanding)
         {
             targetSpeed *= 2f;
         }
-        float acceleration = targetSpeed / _accelerationTime;
-        float deceleration = _movementSpeed / _decelerationTime;
 
-        if (movement.magnitude < _stopThreshold)
+        Vector3 targetVelocity = moveDirection * targetSpeed;
+        Vector3 velocityChange = targetVelocity - _playerRigidbody.velocity;
+        velocityChange.y = 0; // Do not affect the Y velocity
+
+        if (_playerAnimator == null)
         {
-            _playerRigidbody.drag = _movementDrag;
-            _currentSpeed = Mathf.Max(_currentSpeed - deceleration * Time.fixedDeltaTime, 0f);
+            _playerAnimator = GetComponent<Animator>();
         }
-        else
-        {
-            _playerRigidbody.drag = 0f;
-            _currentSpeed = Mathf.Min(_currentSpeed + acceleration * Time.fixedDeltaTime, targetSpeed);
-        }
-        Vector3 moveVelocity = moveNew * _currentSpeed;
-        _playerRigidbody.velocity = moveVelocity;
+
+        _playerAnimator.SetFloat("VelocityX", movementInput.x);
+        _playerAnimator.SetFloat("VelocityZ", movementInput.y);
+
+        _playerRigidbody.AddForce(velocityChange, ForceMode.VelocityChange);
 
         if (isOffhanding || isMainhanding)
         {
             transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.Euler(0, _camera.transform.eulerAngles.y, 0), 10f * Time.fixedDeltaTime);
         }
-        else if (isMoving)
+        else if (movementInput.magnitude > 0f)
         {
-            Quaternion targetRotation = Quaternion.LookRotation(moveNew);
+            Quaternion targetRotation = Quaternion.LookRotation(moveDirection);
             transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, 10f * Time.fixedDeltaTime);
-        }
-
-        if (movement.magnitude < _stopThreshold && _playerRigidbody.velocity.magnitude < 0.1f)
-        {
-            _playerRigidbody.velocity = Vector3.zero;
         }
 
         if (!isGrounded)
@@ -463,11 +610,23 @@ public class PlayerController : NetworkBehaviour, IKillable, IKnockbackable
 
 
 
+
+
     private IEnumerator CheckIfGroundedCoroutine()
     {
         yield return new WaitForSeconds(0.5f);
 
-        isGrounded = Physics.Raycast(transform.position, Vector3.down, 0.5f);
+        Vector3 raycastOrigin = transform.position + Vector3.up * 0.1f; // Slightly above the player's position
+
+        isGrounded = Physics.Raycast(raycastOrigin, Vector3.down, 0.2f);
+
+        if (isGrounded)
+        {
+            _footPlacementScript.EnableDynamicBodyPlacing = true;
+            _footPlacementScript.SmoothIKTransition = true;
+            
+            LandSound();
+        }
     }
 
     private void CheckPlayerInteraction()
@@ -475,6 +634,8 @@ public class PlayerController : NetworkBehaviour, IKillable, IKnockbackable
         if (isCustomizing) return;
 
         RaycastHit hit;
+
+        if (_camera == null) _camera = Camera.main;
         
         Ray ray = new Ray(head.position, _camera.transform.forward);
 
@@ -493,6 +654,8 @@ public class PlayerController : NetworkBehaviour, IKillable, IKnockbackable
     private void OnAnimatorIK(int layerIndex)
     {
         if (!IsLocalPlayer || isCustomizing) return;
+
+        if (_camera == null) _camera = Camera.main;
 
         DirectionReference = _camera.transform;
 
@@ -513,14 +676,29 @@ public class PlayerController : NetworkBehaviour, IKillable, IKnockbackable
 
         _footPlacementScript.EnableDynamicBodyPlacing = false;
         _footPlacementScript.SmoothIKTransition = false;
+        
+        JumpSound();
+
+        if (_playerAnimator == null)
+        {
+            _playerAnimator = GetComponent<Animator>();
+
+            if (_playerAnimator == null)
+            {
+                Debug.LogWarning("PlayerController: Animator component not found");
+
+                return;
+            }
+        }
 
         _playerAnimator.SetAnimatorTrigger(AnimatorTrigger.JumpTrigger);
 
-        float jumpSpeed = Mathf.Sqrt(2f * Physics.gravity.magnitude * PlayerJumpForce);
+            float jumpSpeed = Mathf.Sqrt(2f * Physics.gravity.magnitude * PlayerJumpForce);
 
-        _playerRigidbody.AddForce(Vector3.up * jumpSpeed, ForceMode.VelocityChange);
+            _playerRigidbody.AddForce(Vector3.up * jumpSpeed, ForceMode.VelocityChange);
 
-        isGrounded = false;
+            isGrounded = false;
+        
     }
 
 
@@ -537,6 +715,8 @@ public class PlayerController : NetworkBehaviour, IKillable, IKnockbackable
                 _playerAnimator.SetActionTrigger(AnimatorTrigger.AttackTrigger, attackIndex);
                 _attackLeft = !_attackLeft;
 
+                AttackSound();
+
                 CheckIfHit();
                 break;
             default:
@@ -546,65 +726,58 @@ public class PlayerController : NetworkBehaviour, IKillable, IKnockbackable
     }
 
     // Add this field to your PlayerController class
-    private bool _isBeingKnockedBack = false;
+    [SerializeField] public bool _isBeingKnockedBack = false;
 
-    // Call this method to knock the player back
-    public void Knockback(Vector3 direction, float force)
-    {
-        if (_isBeingKnockedBack)
-        {
-            // Player is already being knocked back, do nothing
-            return;
-        }
-
-        // Disable player movement while they are being knocked back
-        _isBeingKnockedBack = true;
-
-        // Calculate knockback vector
-        Vector3 knockbackVector = direction * force;
-
-        // Apply knockback
-        _playerRigidbody.AddForce(knockbackVector, ForceMode.Impulse);
-
-        // Wait for the knockback to finish before enabling player movement
-        StartCoroutine(EnableMovementAfterDelay(.5f));
-    }
 
     private IEnumerator EnableMovementAfterDelay(float delay)
     {
+        _playerAnimator.SetTrigger("GetUp");
         yield return new WaitForSeconds(delay);
 
-        // Enable player movement
+        if (IsOwner)
+        {
+            _footPlacementScript.EnableDynamicBodyPlacing = true;
+            _footPlacementScript.SmoothIKTransition = true;
+        }
+
+
+
+
+        yield return new WaitForSeconds(.4f);
+        isAlive = true;
         _isBeingKnockedBack = false;
     }
 
+
+
     private void CheckIfHit()
     {
+        if (!IsOwner) return;
+
         float sphereRadius = 0.5f;
         float sphereDistance = 1.0f;
 
         Vector3 sphereCenter = transform.position + transform.forward * 0.5f + transform.up * sphereDistance;
-
         Collider[] colliders = Physics.OverlapSphere(sphereCenter, sphereRadius);
 
         foreach (Collider collider in colliders)
         {
             if (collider.gameObject != gameObject && collider.CompareTag("Player"))
             {
-                IKnockbackable knockbackable = collider.GetComponent<IKnockbackable>();
-                if (knockbackable != null && knockbackable.CanBeKnockedBack)
+                var playerController = collider.GetComponent<PlayerController>();
+                if (playerController && !playerController._isBeingKnockedBack)
                 {
-                    // Apply knockback
-                    float knockbackUpwardForce = 2f;
-                    Vector3 knockbackDirection = (collider.transform.position - transform.position).normalized + Vector3.up * knockbackUpwardForce;
-                    knockbackable.Knockback(knockbackDirection, 585.75f);
+
+                    Debug.Log($"OwnerClientId/TargetClientId: {collider.GetComponent<NetworkObject>().OwnerClientId}");
+
+                    collider.gameObject.GetComponent<KnockbackHandler>().KnockbackServerRpc();
+                    collider.GetComponent<KnockbackHandler>().Knockback();
 
                     return;
                 }
             }
         }
     }
-
 
     public void TakeDamage(float damageTaken)
     {
@@ -628,7 +801,7 @@ public class PlayerController : NetworkBehaviour, IKillable, IKnockbackable
         if (isCustomizing || isTakingSurvey) return;
 
         //TODO: Add pause menu
-        pauseMenuUI.TogglePauseMenu(!isPaused);
+        PauseMenuUI.Instance.TogglePauseMenu(!isPaused);
     }
 
     public void Move(InputAction.CallbackContext context)
@@ -639,8 +812,6 @@ public class PlayerController : NetworkBehaviour, IKillable, IKnockbackable
 
                 isMoving = true;
                 
-
-                //TODO: SET PLAYER MOVING 
                 break;
 
             case InputActionPhase.Performed:
@@ -649,12 +820,9 @@ public class PlayerController : NetworkBehaviour, IKillable, IKnockbackable
             case InputActionPhase.Canceled:
                 isMoving = false;
 
-                //TODO: SET PLAYER MOVING
-
                 break;
         }
     }
-
 
     public void Jump(InputAction.CallbackContext context)
     {
@@ -835,7 +1003,3 @@ public class PlayerController : NetworkBehaviour, IKillable, IKnockbackable
         }
     }
 }
-
-
-
-

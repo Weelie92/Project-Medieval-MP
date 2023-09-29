@@ -19,6 +19,11 @@ public class ScoreBoard : MonoBehaviour
             Instance = this;
         }
 
+        InvokeRepeating(nameof(UpdateScoreBoard), 5f, 5f);
+    }
+
+    void UpdateScoreBoard()
+    {
         BuildScoreBoard();
     }
 
@@ -26,29 +31,29 @@ public class ScoreBoard : MonoBehaviour
     {
         ClearScoreBoard();
 
-        Dictionary<ulong, int> list = MinigameScoreTracker.Instance.GetPlayerScores();
+        Dictionary<ulong, int> scoreList = MinigameScoreTracker.Instance.GetPlayerScores();
+        Dictionary<ulong, string> nameList = MinigameScoreTracker.Instance.GetPlayerNames();
 
-        var sortedPlayerScores = list.OrderByDescending(kvp => kvp.Value);
+        var sortedPlayerScores = scoreList.OrderByDescending(kvp => kvp.Value);
 
-
-
-        for (int i = 0; i < list.Count; i++)
+        for (int i = 0; i < scoreList.Count; i++)
         {
-            {
-                KeyValuePair<ulong, int> pair = sortedPlayerScores.ElementAt(i);
+            KeyValuePair<ulong, int> scorePair = sortedPlayerScores.ElementAt(i);
 
-                ulong clientId = pair.Key;
-                int score = pair.Value;
+            ulong clientId = scorePair.Key;
+            int score = scorePair.Value;
+            string name = nameList[clientId];
 
-                GameObject scoreBoardContent = Instantiate(_scoreBoardContentPrefab, _scoreBoardContentParent);
+            GameObject scoreBoardContent = Instantiate(_scoreBoardContentPrefab, _scoreBoardContentParent);
 
-                scoreBoardContent.GetComponent<PlayerScoreUI>().SetPlayerScore(clientId, score);
-            }
+            scoreBoardContent.GetComponent<PlayerScoreUI>().SetPlayerScore(name, score);
         }
     }
 
+
     private void ClearScoreBoard()
     {
+        if (_scoreBoardContentParent == null) _scoreBoardContentParent = GameObject.FindGameObjectWithTag("UI_ScoreBoardBG").transform;
         foreach (Transform child in _scoreBoardContentParent)
         {
             Destroy(child.gameObject);

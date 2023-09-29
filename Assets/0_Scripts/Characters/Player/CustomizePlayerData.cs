@@ -14,7 +14,7 @@ public class CustomizePlayerData : NetworkBehaviour
     public NetworkList<int> allNetworkChildObjectsIndex;
 
     
-    private void OnEnable()
+    private void Awake()
     {
         allNetworkChildObjectsIndex = new NetworkList<int>();
 
@@ -132,7 +132,7 @@ public class CustomizePlayerData : NetworkBehaviour
             for (int i = 0; i < 26; i++)
             {
                 // -1 is used to indicate that the slot is empty
-                list.Add(-1);
+               list.Add(-1);
             }
         }
     }
@@ -145,6 +145,7 @@ public class CustomizePlayerData : NetworkBehaviour
         // Get the correct playerobject, using the clientId
         if (NetworkManager.ConnectedClients.ContainsKey(clientId))
         {
+
             NetworkClient client = NetworkManager.ConnectedClients[clientId];
 
             // Grab the NetworkList from the playerobject
@@ -271,6 +272,7 @@ public class CustomizePlayerData : NetworkBehaviour
     [ServerRpc(RequireOwnership = false)]
     public void UpdateCharacterServerRpc(int[] activePartsIndex, ServerRpcParams serverRpcParams = default)
     {
+        
         ConstructNetworkListServerRpc(serverRpcParams.Receive.SenderClientId);
         SetNetworkListServerRpc(activePartsIndex, serverRpcParams.Receive.SenderClientId);
     }

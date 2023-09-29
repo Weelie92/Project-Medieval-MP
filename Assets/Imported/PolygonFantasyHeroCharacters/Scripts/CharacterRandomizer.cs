@@ -1,6 +1,10 @@
 ﻿// character randomizer version 1.30
+using System.Collections;
 using System.Collections.Generic;
+using QFSW.QC;
+using Unity.Netcode;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace PsychoticLab
 {
@@ -60,8 +64,8 @@ namespace PsychoticLab
         public Color[] bodyArt = { new Color(0.0509804f, 0.6745098f, 0.9843138f), new Color(0.7215686f, 0.2666667f, 0.2666667f), new Color(0.3058824f, 0.7215686f, 0.6862745f), new Color(0.9254903f, 0.882353f, 0.8509805f), new Color(0.3098039f, 0.7058824f, 0.3137255f), new Color(0.5294118f, 0.3098039f, 0.6470588f), new Color(0.8666667f, 0.7764707f, 0.254902f), new Color(0.2392157f, 0.4588236f, 0.8156863f) };
 
         // list of enabed objects on character
-        [HideInInspector]
-        public List<GameObject> enabledObjects = new List<GameObject>();
+        //[HideInInspector]
+        //public List<GameObject> enabledObjects = new List<GameObject>();
 
         // character object lists
         // male list
@@ -96,75 +100,65 @@ namespace PsychoticLab
             }
             */
 
-            GUIStyle style = new GUIStyle();
-            style.normal.textColor = Color.white;
-            style.fontStyle = FontStyle.Bold;
-            style.fontSize = 24;
-            GUI.Label(new Rect(10, 10, 150, 50), "Hold Right Mouse Button Down\nor use W A S D To Rotate.", style);
+            //GUIStyle style = new GUIStyle();
+            //style.normal.textColor = Color.white;
+            //style.fontStyle = FontStyle.Bold;
+            //style.fontSize = 24;
+            //GUI.Label(new Rect(10, 10, 150, 50), "Hold Right Mouse Button Down\nor use W A S D To Rotate.", style);
         }
 
-        private void Start()
+        public static CustomizeUI instance;
+
+        private void  Start()
         {
+            instance = CustomizeUI.Instance;
+
             // rebuild all lists
             BuildLists();
 
             // disable any enabled objects before clear
-            if (enabledObjects.Count != 0)
+            if (instance.enabledObjects.Count != 0)
             {
-                foreach (GameObject g in enabledObjects)
+                foreach (GameObject g in instance.enabledObjects)
                 {
                     g.SetActive(false);
                 }
             }
 
             // clear enabled objects list
-            enabledObjects.Clear();
+            instance.enabledObjects.Clear();
 
             // set default male character
-            ActivateItem(male.headAllElements[0]);
-            ActivateItem(male.eyebrow[0]);
-            ActivateItem(male.facialHair[0]);
-            ActivateItem(male.torso[0]);
-            ActivateItem(male.arm_Upper_Right[0]);
-            ActivateItem(male.arm_Upper_Left[0]);
-            ActivateItem(male.arm_Lower_Right[0]);
-            ActivateItem(male.arm_Lower_Left[0]);
-            ActivateItem(male.hand_Right[0]);
-            ActivateItem(male.hand_Left[0]);
-            ActivateItem(male.hips[0]);
-            ActivateItem(male.leg_Right[0]);
-            ActivateItem(male.leg_Left[0]);
+            instance.ActivateItem(male.headAllElements[0]);
+            instance.ActivateItem(male.eyebrow[0]);
+            instance.ActivateItem(male.facialHair[0]);
+            instance.ActivateItem(male.torso[0]);
+            instance.ActivateItem(male.arm_Upper_Right[0]);
+            instance.ActivateItem(male.arm_Upper_Left[0]);
+            instance.ActivateItem(male.arm_Lower_Right[0]);
+            instance.ActivateItem(male.arm_Lower_Left[0]);
+            instance.ActivateItem(male.hand_Right[0]);
+            instance.ActivateItem(male.hand_Left[0]);
+            instance.ActivateItem(male.hips[0]);
+            instance.ActivateItem(male.leg_Right[0]);
+            instance.ActivateItem(male.leg_Left[0]);
 
-            // setting up the camera position, rotation, and reference for use
-            Transform cam = Camera.main.transform;
-            if(cam)
-            {
-                cam.position = transform.position + new Vector3(0, 0.3f, 2);
-                cam.rotation = Quaternion.Euler(0, -180, 0);
-                camHolder = new GameObject().transform;
-                camHolder.position = transform.position + new Vector3(0, 1, 0);
-                cam.LookAt(camHolder);
-                cam.SetParent(camHolder);
-            }
+            
 
             // if repeat on play is checked in the inspector, repeat the randomize method based on the shuffle speed, also defined in the inspector
             if (repeatOnPlay)
                 InvokeRepeating("Randomize", shuffleSpeed, shuffleSpeed);
+
+            bool isLobbyReadyScene = SceneManager.GetActiveScene().name == "LobbyReadyScene";
+            Randomize(isLobbyReadyScene);
         }
 
-        void LateUpdate()
-        {
-            // method for handling the camera rotation around the character
-            if (camHolder)
-            {
-                y = Mathf.Clamp(y, -45, 15);
-                camHolder.eulerAngles = new Vector3(y, x, 0.0f);
-            }
-        }
 
         // character randomization method
-        void Randomize()
+        [Command]
+        public void Randomize(bool isReadyScene = false)
         {
+            
             // initialize settings
             Gender gender = Gender.Male;
             Race race = Race.Human;
@@ -172,18 +166,25 @@ namespace PsychoticLab
             Elements elements = Elements.Yes;
             HeadCovering headCovering = HeadCovering.HeadCoverings_Base_Hair;
             FacialHair facialHair = FacialHair.Yes;
+            instance = CustomizeUI.Instance;
 
-            // disable any enabled objects before clear
-            if (enabledObjects.Count != 0)
+            if (instance.enabledObjects.Count == 0)
             {
-                foreach (GameObject g in enabledObjects)
+                instance.Initialize();
+            }
+            // disable any enabled objects before clear
+            if (instance.enabledObjects.Count != 0)
+            {
+                            instance = CustomizeUI.Instance;
+
+                foreach (GameObject g in instance.enabledObjects)
                 {
                     g.SetActive(false);
                 }
             }
 
             // clear enabled objects list (all objects now disabled)
-            enabledObjects.Clear();
+            instance.enabledObjects.Clear();
 
             // roll for gender
             if (!GetPercent(50))
@@ -252,6 +253,7 @@ namespace PsychoticLab
                     RandomizeByVariable(female, gender, elements, race, facialHair, skinColor, headCovering);
                     break;
             }
+
         }
 
         // randomization method based on previously selected variables
@@ -263,15 +265,15 @@ namespace PsychoticLab
                 case Elements.Yes:
                     //select head with all elements
                     if (cog.headAllElements.Count != 0)
-                        ActivateItem(cog.headAllElements[Random.Range(0, cog.headAllElements.Count)]);
+                        instance.ActivateItem(cog.headAllElements[Random.Range(0, cog.headAllElements.Count)]);
 
                     //select eyebrows
                     if (cog.eyebrow.Count != 0)
-                        ActivateItem(cog.eyebrow[Random.Range(0, cog.eyebrow.Count)]);
+                        instance.ActivateItem(cog.eyebrow[Random.Range(0, cog.eyebrow.Count)]);
 
                     //select facial hair (conditional)
                     if (cog.facialHair.Count != 0 && facialHair == FacialHair.Yes && gender == Gender.Male && headCovering != HeadCovering.HeadCoverings_No_FacialHair)
-                        ActivateItem(cog.facialHair[Random.Range(0, cog.facialHair.Count)]);
+                        instance.ActivateItem(cog.facialHair[Random.Range(0, cog.facialHair.Count)]);
 
                     // select hair attachment
                     switch (headCovering)
@@ -279,27 +281,27 @@ namespace PsychoticLab
                         case HeadCovering.HeadCoverings_Base_Hair:
                             // set hair attachment to index 1
                             if (allGender.all_Hair.Count != 0)
-                                ActivateItem(allGender.all_Hair[1]);
+                                instance.ActivateItem(allGender.all_Hair[1]);
                             if (allGender.headCoverings_Base_Hair.Count != 0)
-                                ActivateItem(allGender.headCoverings_Base_Hair[Random.Range(0, allGender.headCoverings_Base_Hair.Count)]);
+                                instance.ActivateItem(allGender.headCoverings_Base_Hair[Random.Range(0, allGender.headCoverings_Base_Hair.Count)]);
                             break;
                         case HeadCovering.HeadCoverings_No_FacialHair:
                             // no facial hair attachment
                             if (allGender.all_Hair.Count != 0)
-                                ActivateItem(allGender.all_Hair[Random.Range(0, allGender.all_Hair.Count)]);
+                                instance.ActivateItem(allGender.all_Hair[Random.Range(0, allGender.all_Hair.Count)]);
                             if (allGender.headCoverings_No_FacialHair.Count != 0)
-                                ActivateItem(allGender.headCoverings_No_FacialHair[Random.Range(0, allGender.headCoverings_No_FacialHair.Count)]);
+                                instance.ActivateItem(allGender.headCoverings_No_FacialHair[Random.Range(0, allGender.headCoverings_No_FacialHair.Count)]);
                             break;
                         case HeadCovering.HeadCoverings_No_Hair:
                             // select hair attachment
                             if (allGender.headCoverings_No_Hair.Count != 0)
-                                ActivateItem(allGender.all_Hair[Random.Range(0, allGender.all_Hair.Count)]);
+                                instance.ActivateItem(allGender.all_Hair[Random.Range(0, allGender.all_Hair.Count)]);
                             // if not human
                             if (race != Race.Human)
                             {
                                 // select elf ear attachment
                                 if (allGender.elf_Ear.Count != 0)
-                                    ActivateItem(allGender.elf_Ear[Random.Range(0, allGender.elf_Ear.Count)]);
+                                    instance.ActivateItem(allGender.elf_Ear[Random.Range(0, allGender.elf_Ear.Count)]);
                             }
                             break;
                     }
@@ -308,13 +310,13 @@ namespace PsychoticLab
                 case Elements.No:
                     //select head with no elements
                     if (cog.headNoElements.Count != 0)
-                        ActivateItem(cog.headNoElements[Random.Range(0, cog.headNoElements.Count)]);
+                        instance.ActivateItem(cog.headNoElements[Random.Range(0, cog.headNoElements.Count)]);
                     break;
             }
 
             // select torso starting at index 1
             if (cog.torso.Count != 0)
-                ActivateItem(cog.torso[Random.Range(1, cog.torso.Count)]);
+                instance.ActivateItem(cog.torso[Random.Range(1, cog.torso.Count)]);
 
             // determine chance for upper arms to be different and activate
             if (cog.arm_Upper_Right.Count != 0)
@@ -330,7 +332,7 @@ namespace PsychoticLab
 
             // select hips starting at index 1
             if (cog.hips.Count != 0)
-                ActivateItem(cog.hips[Random.Range(1, cog.hips.Count)]);
+                instance.ActivateItem(cog.hips[Random.Range(1, cog.hips.Count)]);
 
             // determine chance for legs to be different and activate
             if (cog.leg_Right.Count != 0)
@@ -338,11 +340,11 @@ namespace PsychoticLab
 
             // select chest attachment
             if (allGender.chest_Attachment.Count != 0)
-                ActivateItem(allGender.chest_Attachment[Random.Range(0, allGender.chest_Attachment.Count)]);
+                instance.ActivateItem(allGender.chest_Attachment[Random.Range(0, allGender.chest_Attachment.Count)]);
 
             // select back attachment
             if (allGender.back_Attachment.Count != 0)
-                ActivateItem(allGender.back_Attachment[Random.Range(0, allGender.back_Attachment.Count)]);
+                instance.ActivateItem(allGender.back_Attachment[Random.Range(0, allGender.back_Attachment.Count)]);
 
             // determine chance for shoulder attachments to be different and activate
             if (allGender.shoulder_Attachment_Right.Count != 0)
@@ -354,18 +356,19 @@ namespace PsychoticLab
 
             // select hip attachment
             if (allGender.hips_Attachment.Count != 0)
-                ActivateItem(allGender.hips_Attachment[Random.Range(0, allGender.hips_Attachment.Count)]);
+                instance.ActivateItem(allGender.hips_Attachment[Random.Range(0, allGender.hips_Attachment.Count)]);
 
             // determine chance for knee attachments to be different and activate
             if (allGender.knee_Attachement_Right.Count != 0)
                 RandomizeLeftRight(allGender.knee_Attachement_Right, allGender.knee_Attachement_Left, 10);
 
+
             // start randomization of the random characters colors
-            RandomizeColors(skinColor);
+           StartCoroutine(RandomizeColors(skinColor));
         }
 
         // handle randomization of the random characters colors
-        void RandomizeColors(SkinColor skinColor)
+        IEnumerator RandomizeColors(SkinColor skinColor)
         {
             // set skin and hair colors based on skin color roll
             switch (skinColor)
@@ -435,6 +438,11 @@ namespace PsychoticLab
 
             // randomize and set body art amount
             mat.SetFloat("_BodyArt_Amount", Random.Range(0.0f, 1.0f));
+
+            yield return new WaitForSeconds(0.5f);
+
+            instance.SaveCustomization();
+
         }
 
         void RandomizeAndSetHairSkinColors(string info, Color[] skin, Color[] hair, Color stubble, Color scar)
@@ -475,14 +483,14 @@ namespace PsychoticLab
             int index = Random.Range(0, objectListRight.Count);
 
             // enable item from list using index
-            ActivateItem(objectListRight[index]);
+            instance.ActivateItem(objectListRight[index]);
 
             // roll for left item mismatch, if true randomize index based on left item list
             if (GetPercent(rndPercent))
                 index = Random.Range(0, objectListLeft.Count);
 
             // enable left item from list using index
-            ActivateItem(objectListLeft[index]);
+            instance.ActivateItem(objectListLeft[index]);
         }
 
         // enable game object and add it to the enabled objects list
@@ -492,7 +500,7 @@ namespace PsychoticLab
             go.SetActive(true);
 
             // add item to the enabled items list
-            enabledObjects.Add(go);
+            instance.enabledObjects.Add(go);
         }
 
         Color ConvertColor(int r, int g, int b)

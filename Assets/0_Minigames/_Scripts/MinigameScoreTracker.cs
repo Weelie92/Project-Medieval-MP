@@ -17,6 +17,8 @@ public class MinigameScoreTracker : NetworkBehaviour
     [SerializeField] private NetworkList<ulong> _playerIds;
 
     [SerializeField] private Dictionary<ulong, int> _playerScores = new Dictionary<ulong, int>();
+    private Dictionary<ulong, string> _playerNames = new Dictionary<ulong, string>();
+
 
     private void Awake()
     {
@@ -25,7 +27,7 @@ public class MinigameScoreTracker : NetworkBehaviour
             Instance = this;
         }
 
-        _playerIds = new NetworkList<ulong>();
+         _playerIds = new NetworkList<ulong>();
 
     }
 
@@ -34,27 +36,50 @@ public class MinigameScoreTracker : NetworkBehaviour
     [ServerRpc(RequireOwnership = false)]
     public void AddPlayerServerRpc(ulong clientId)
     {
+
+
         if (_playerScores.ContainsKey(clientId)) return;
 
 
         _playerScores.Add(clientId, 0);
         _playerIds.Add(clientId);
 
-        for (int i = 0; i < _playerScores.Count; i++)
+        foreach (ulong id in _playerIds)
         {
-            KeyValuePair<ulong, int> pair = _playerScores.ElementAt(i);
-
-            ulong tempClientId = pair.Key;
-
-            PlayerChangeClientRpc(tempClientId, true);
+            if (_playerScores.TryGetValue(id, out int score))
+            {
+                PlayerChangeClientRpc(id, true);
+            }
         }
 
         onPlayerAddEvent.Invoke();
 
-
         UpdateScoreUIClientRpc();
 
     }
+
+    [ServerRpc(RequireOwnership = false)]
+    public void SetPlayerNameServerRpc(string playerName, ulong clientId)
+    {
+        Debug.Log("Player Name: " + playerName + " Client ID: " + clientId);
+
+        SetPlayerNameClientRpc(playerName, clientId);
+    }
+
+    [ClientRpc]
+    public void SetPlayerNameClientRpc(string playerName, ulong clientId)
+    {
+        if (!_playerNames.ContainsKey(clientId))
+        {
+            _playerNames.Add(clientId, playerName);
+        }
+        else
+        {
+            _playerNames[clientId] = playerName;
+        }
+    }
+
+
 
     [ServerRpc(RequireOwnership = false)]
     public void RemovePlayerServerRpc(ulong clientId)
@@ -88,7 +113,7 @@ public class MinigameScoreTracker : NetworkBehaviour
     {
         if (_playerScores.ContainsKey(clientId))
         {
-            ChangeScoreClientRpc(clientId, 1);
+            ChangeScoreServerRpc(clientId, 1);
         }
     }
 
@@ -96,8 +121,14 @@ public class MinigameScoreTracker : NetworkBehaviour
     {
         if (_playerScores.ContainsKey(clientId))
         {
-            ChangeScoreClientRpc(clientId, -1);
+            ChangeScoreServerRpc(clientId, -1);
         }
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    public void ChangeScoreServerRpc(ulong clientId, int value)
+    {
+        ChangeScoreClientRpc(clientId, value);
     }
 
     [ClientRpc]
@@ -105,7 +136,7 @@ public class MinigameScoreTracker : NetworkBehaviour
     {
         _playerScores[clientId] += value;
 
-        UpdateScoreUIClientRpc();
+        UpdateScoreUI();
     }
 
     public int GetScore(ulong clientId)
@@ -126,7 +157,12 @@ public class MinigameScoreTracker : NetworkBehaviour
     }
 
     [ClientRpc]
-    public void UpdateScoreUIClientRpc()
+    void UpdateScoreUIClientRpc()
+    {
+        UpdateScoreUI();
+    }
+
+    public void UpdateScoreUI()
     {
         if (ScoreBoard.Instance != null) ScoreBoard.Instance.BuildScoreBoard();
 
@@ -137,12 +173,58 @@ public class MinigameScoreTracker : NetworkBehaviour
         foreach (var kvp in sortedPlayerScores)
         {
             GameObject playerScore = Instantiate(_playerScorePrefab, _playerScoreParent);
-            playerScore.GetComponent<PlayerScoreUI>().SetPlayerScore(kvp.Key, kvp.Value);
+
+            if (playerScore != null)
+            {
+                PlayerScoreUI playerScoreUI = playerScore.GetComponent<PlayerScoreUI>();
+
+                if (playerScoreUI != null)
+                {
+                    string playerName = GetPlayerName(kvp.Key);
+                    if (playerName != null)
+                    {
+                        playerScoreUI.SetPlayerScore(playerName, kvp.Value);
+                    }
+                    else
+                    {
+                        Debug.LogError("Player name not found for client ID: " + kvp.Key);
+                    }
+                }
+                else
+                {
+                    Debug.LogError("PlayerScoreUI component not found on the playerScore object.");
+                }
+            }
+            else
+            {
+                Debug.LogError("Failed to instantiate playerScore object.");
+            }
         }
     }
 
+    public Dictionary<ulong, string> GetPlayerNames()
+    {
+        return _playerNames;
+    }
+
+    public string GetPlayerName(ulong clientId)
+    {
+        if (_playerNames.TryGetValue(clientId, out string playerName))
+        {
+            return playerName;
+        }
+        else
+        {
+            Debug.LogWarning("Player name not found for client ID: " + clientId);
+            return null;
+        }
+    }
+
+
     public void ClearScoreboard()
     {
+        _playerScoreParent = GameObject.FindGameObjectWithTag("UI_ScoreBoardBG").transform;
+
         foreach (Transform child in _playerScoreParent)
         {
             Destroy(child.gameObject);

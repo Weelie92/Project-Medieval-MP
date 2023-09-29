@@ -1,5 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
+using Mono.CSharp;
+using QFSW.QC;
 using Unity.Netcode;
 using UnityEngine;
 
@@ -10,6 +12,9 @@ public class MG_Settings : NetworkBehaviour
     [SerializeField] float _serverStartTimer = 2f;
     [SerializeField] int _timer;
 
+    UIMessageSystem UIMessageSystem;
+    LoadingHUD LoadingHUDInstance;
+
     [Header("Minigame Team Size: Solo = FFA, Two = 2v2v2v2, Four = 4v4, 3 = 1vRest, All = All on team")]
     [SerializeField] private MinigameTeamSize _minigameTeamSize;
 
@@ -18,6 +23,20 @@ public class MG_Settings : NetworkBehaviour
     public List<Transform> _spawnPoints;
     private Vector3 _spawnPoint;
 
+
+    private void Awake()
+    {
+        UIMessageSystem = UIMessageSystem.Instance;
+        LoadingHUDInstance = LoadingHUD.Instance;
+
+
+    }
+
+    private void Start()
+    {
+        LoadingHUD.Instance.ToggleFade(true, true);
+
+    }
 
     enum MinigameTeamSize { Solo, Two, Four, OneMan, All };
 
@@ -28,15 +47,8 @@ public class MG_Settings : NetworkBehaviour
 
 
 
-    // 2
     public IEnumerator SpawnPlayers(List<ulong> clientsCompleted)
     {
-        if (_playersSpawned) yield return null;
-
-        // Shuffle the list of spawn points
-        _spawnPoints.Shuffle();
-
-        // Spawns the players
         List<Transform> spawnPoints = new List<Transform>(_spawnPoints);
 
         foreach (var clientId in clientsCompleted)
@@ -45,72 +57,150 @@ public class MG_Settings : NetworkBehaviour
 
             if (player == null) continue;
 
-            Transform spawnPoint = spawnPoints[0];
-            spawnPoints.RemoveAt(0);
+            player.GetComponent<PlayerController>().enabled = false;
 
-            MovePlayerToSpawnPointClientRpc(spawnPoint.position, clientId);
+            if (spawnPoints.Count == 0)
+            {
+                Debug.LogError("Not enough spawn points!");
+                yield break;
+            }
 
-            yield return new WaitForSeconds(.5f);
+            int spawnPointIndex = Random.Range(0, spawnPoints.Count);
+            Transform spawnPoint = spawnPoints[spawnPointIndex];
+            spawnPoints.RemoveAt(spawnPointIndex);
+
+
+            MovePlayerToSpawnPointClientRpc(spawnPoint.position + new Vector3(0, 1f, 0), clientId);
+
+            yield return new WaitForSeconds(1f);
+
+            player.GetComponent<PlayerController>().enabled = true;
+
         }
 
-        _playersSpawned = true;
-
-        // Sets timer
-        SetPlayerTimersClientRpc();
 
         StartMinigameServerRpc();
     }
 
 
-    // 3
     [ClientRpc]
-    private void MovePlayerToSpawnPointClientRpc(Vector3 spawnPoint, ulong clientId)
+    private void MovePlayerToSpawnPointClientRpc(Vector3 spawnPointPos, ulong clientId)
     {
-        if (NetworkManager.LocalClientId != clientId) return;
-
-        _spawnPoint = spawnPoint;
-
-        NetworkManager.LocalClient.PlayerObject.transform.position = _spawnPoint;
+        if (NetworkManager.Singleton.LocalClientId == clientId)
+            StartCoroutine(MovePlayerObject(spawnPointPos));
     }
 
-    // 4
-    [ClientRpc]
-    private void SetPlayerTimersClientRpc()
+
+
+    private IEnumerator MovePlayerObject(Vector3 spawnPoint)
     {
-        if (_timer == 0)
+        NetworkObject localPlayerObject = NetworkManager.Singleton.LocalClient.PlayerObject;
+
+        SetPlayerMovement(false);
+        
+        localPlayerObject.transform.position = spawnPoint;
+
+        UpdatePlayerPositionServerRpc(NetworkManager.Singleton.LocalClientId, spawnPoint);
+
+        yield return new WaitForSeconds(1f);
+        SetPlayerMovement(true);
+    }
+
+    [ServerRpc]
+    private void UpdatePlayerPositionServerRpc(ulong clientId, Vector3 newPosition)
+    {
+        NetworkObject player = NetworkManager.ConnectedClients[clientId].PlayerObject;
+        if (player != null)
         {
-            _timerUI.enabled = false;
-        }
-        else
-        {
-            _timerUI.enabled = true;
-            _timerUI.SetTimer();
+            player.transform.position = newPosition;
         }
     }
+
+
+    private void SetPlayerMovement(bool enabled)
+    {
+        var playerObject = NetworkManager.Singleton.LocalClient.PlayerObject;
+
+        var playerController = playerObject.GetComponent<PlayerController>();
+        if (playerController != null)
+        {
+            playerController.enabled = enabled;
+        }
+
+        var collider = playerObject.GetComponent<CapsuleCollider>();
+        if (collider != null)
+        {
+            collider.enabled = enabled;
+        }
+
+        var rigidbody = playerObject.GetComponent<Rigidbody>();
+        if (rigidbody != null)
+        {
+            rigidbody.isKinematic = !enabled;
+        }
+    }
+
+
+
+
+
+
 
     // 5
     [ServerRpc]
     private void StartMinigameServerRpc()
     {
         GetComponent<IMinigame>().StartSelectedMinigameServerRpc();
+
+
+        ToggleLoadingHUDClientRpc();
     }
+
+    [ClientRpc]
+    private void ToggleLoadingHUDClientRpc()
+    {
+        StartCoroutine(ToggleLoadingHUD());
+    }
+
+
+    IEnumerator ToggleLoadingHUD()
+    {
+        yield return new WaitForSeconds(1f);
+        LoadingHUD.Instance.ToggleFade(false);
+    }
+
+
 
     // 7
     [ServerRpc]
-    public void StartCountdownServerRpc()
+    public void StartCountdownServerRpc(int countdownTime)
     {
-        if (_timer > 0)
+        StartCountdownClientRpc(countdownTime);
+    }
+
+    [ClientRpc]
+    private void StartCountdownClientRpc(int countdownTime)
+    {
+        StartCoroutine(StartCountdown(countdownTime));
+    }
+
+    private IEnumerator StartCountdown(int countdownTime)
+    {
+        int timer = countdownTime;
+
+        for (int i = 0; i < timer; i++)
         {
-            _timer--;
+            _timerUI.timerText.text = timer.ToString();
 
-            UpdateCountdownTimerClientRpc(_timer);
+            yield return new WaitForSeconds(1f);
 
-            if (_timer == 0)
+            if (timer == 0)
             {
-                CancelInvoke(nameof(StartCountdownServerRpc));
+
             }
         }
     }
+
 
     // 8
     [ClientRpc]
@@ -144,15 +234,82 @@ public class MG_Settings : NetworkBehaviour
                 }
             }
 
-            if (playersAlive == 1)
+            if (playersAlive <= 1)
             {
-                // Player won
-                MinigameScoreTracker.Instance.IncrementScore(winnerPlayer);
+               
 
-                Debug.Log("Game Over, player " + winnerPlayer + " won!");
+                if (playersAlive == 0)
+                {
+                    // Draw
+                    UIMessageSystem.Instance.DisplayMessageServerRpc("Game Over, draw!", 5);
+                    PickWinner(winnerPlayer);
+
+
+                }
+                else
+                {
+                    // Player won
+                    UIMessageSystem.Instance.DisplayMessageServerRpc("Game Over, player " + winnerPlayer + " won!", 5);
+                    PickWinner(winnerPlayer);
+
+                }
             }
         }
     }
+
+    public void PickWinner(ulong winnerPlayer)
+    {
+        if (!IsServer) return;
+
+        MinigameScoreTracker.Instance.IncrementScore(winnerPlayer);
+
+        foreach (NetworkClient player in NetworkManager.ConnectedClientsList)
+        {
+            ulong playerId = player.PlayerObject.GetComponent<NetworkObject>().OwnerClientId;
+
+            if (playerId != winnerPlayer)
+            {
+                PlayLossSoundClientRpc(playerId);
+            }
+            else
+            {
+                PlayVictorySoundClientRpc(playerId);
+            }
+        }
+
+        StartCoroutine(ChangeToLobby());
+    }
+
+    private IEnumerator ChangeToLobby()
+    {
+        yield return new WaitForSeconds(2f);
+
+        NetworkSceneManager.Instance.ChangeSceneOnClickLobby();
+    }
+
+    [ClientRpc]
+    private void PlayVictorySoundClientRpc(ulong clientId, ClientRpcParams clientRpcParams = default)
+    {
+        if (NetworkManager.Singleton.LocalClientId == clientId)
+        {
+            PlayerController localPlayerController = NetworkManager.Singleton.ConnectedClients[clientId].PlayerObject.GetComponent<PlayerController>();
+            localPlayerController.VictorySound();
+        }
+    }
+
+    [ClientRpc]
+    private void PlayLossSoundClientRpc(ulong clientId, ClientRpcParams clientRpcParams = default)
+    {
+        if (NetworkManager.Singleton.LocalClientId == clientId)
+        {
+            PlayerController localPlayerController = NetworkManager.Singleton.ConnectedClients[clientId].PlayerObject.GetComponent<PlayerController>();
+            localPlayerController.LossSound();
+        }
+    }
+
+
+
+
 
 }
 

@@ -1,7 +1,8 @@
+using Unity.Netcode;
 using UnityEngine;
 
 public interface IKnockbackable
 {
     bool CanBeKnockedBack { get; set; }
-    void Knockback(Vector3 direction, float force);
+    void KnockbackClientRpc(Vector3 direction, float force, ulong targetClientId, ClientRpcParams clientRpcParams = default);
 }

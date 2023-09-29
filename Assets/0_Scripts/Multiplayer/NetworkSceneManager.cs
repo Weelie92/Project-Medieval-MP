@@ -6,22 +6,37 @@ using UnityEngine;
 using UnityEditor;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using System;
 
 
 public class SceneNames
 {
     public const string Prototype = "Prototype";
     public const string Minigame1 = "MG_PlatformJump";
-    public const string Lobby = "Lobby";
+    public const string Minigame2 = "MG_Race";
+    public const string Lobby = "GameScene";
    
 }
 
 public class NetworkSceneManager : NetworkBehaviour
 {
     public static NetworkSceneManager Instance;
+    public LoadingHUD LoadingHUDInstance;
+
+    private string _activeMinigameScene = null;
+
+    [SerializeField] private AudioSource _audioSource;
+   
+
+    [SerializeField] private AudioClip _gameSceneMusic;
+    [SerializeField] private AudioClip _raceSceneMusic;
+    [SerializeField] private AudioClip _platformSceneMusic;
+
+    [SerializeField] private Button _muteButton;
 
     [SerializeField] private Button _startPrototype;
-    [SerializeField] private Button _startMinigames;
+    [SerializeField] private Button _mg_PlatformJump;
+    [SerializeField] private Button _mg_Race;
     [SerializeField] private Button _startLobby;
 
     [SerializeField] private string _lobbySceneName;
@@ -30,57 +45,147 @@ public class NetworkSceneManager : NetworkBehaviour
     [SerializeField] private string _nextSceneName;
     [SerializeField] private string _previousSceneName;
 
-    private void Awake()
+
+
+    private void Start()
     {
-        if (_startMinigames == null) return;
+        _muteButton.onClick.AddListener(ToggleMuteMusic);
+
+
+        if (_mg_PlatformJump == null) return;
 
         Instance = this;
+        LoadingHUDInstance = LoadingHUD.Instance;
 
         _currentSceneName = SceneManager.GetActiveScene().name;
 
-        _startMinigames.onClick.AddListener(ChangeSceneOnClick);
+        _mg_PlatformJump.onClick.AddListener(ChangeSceneOnClickPlatform);
+        _mg_Race.onClick.AddListener(ChangeSceneOnClickRace);
+
         _startLobby.onClick.AddListener(ChangeSceneOnClickLobby);
-        _startPrototype.onClick.AddListener(ChangeSceneOnClickPrototype);
+
+        UpdateButtonAvailability();
+
+    }
+    public void ToggleMuteMusic()
+    {
+        _audioSource.volume = _audioSource.volume > 0 ? 0 : 1;
     }
 
-    private void ChangeSceneOnClick()
+    [ClientRpc]
+    private void ChangeMusicClientRpc(string sceneName)
     {
-        if (!IsServer) return;
+        AudioClip musicClip = null;
 
-        ToggleChangingSceneServerRpc();
+        if (sceneName == "Game")
+        {
+            musicClip = _gameSceneMusic;
+        }
+        else if (sceneName == "Race")
+        {
+            musicClip = _raceSceneMusic;
+        }
+        else if (sceneName == "Platform")
+        {
+            musicClip = _platformSceneMusic;
+        }
 
-        int index = Random.Range(0, _minigameSceneNames.Count);
-        NetworkManager.Singleton.SceneManager.LoadScene(_minigameSceneNames[index], LoadSceneMode.Single);
+        if (musicClip != null)
+        {
+            _audioSource.clip = musicClip;
+            _audioSource.Play();
+        }
+    }
+
+
+
+    private void UpdateButtonAvailability()
+    {
+        if (_activeMinigameScene == null)
+        {
+            // In the Lobby, only the minigame buttons should be available.
+            _startLobby.interactable = false;
+            _mg_PlatformJump.interactable = true;
+            _mg_Race.interactable = true;
+        }
+        else
+        {
+            // In a Minigame, only the Lobby button should be available.
+            _startLobby.interactable = true;
+            _mg_PlatformJump.interactable = false;
+            _mg_Race.interactable = false;
+        }
+    }
+
+    private void ChangeSceneOnClickPlatform()
+    {
+        if (!IsServer || !IsHost) return;
+
+        _activeMinigameScene = Loader.Scene.MG_PlatformJump.ToString();
+
+        PauseMenuUI.Instance.TogglePauseMenu(false);
+
+        NetworkManager.Singleton.SceneManager.LoadScene(Loader.Scene.MG_PlatformJump.ToString(), LoadSceneMode.Additive);
+
+        UpdateButtonAvailability();
+
+        ChangeMusicClientRpc("Platform");
+    }
+
+    private void ChangeSceneOnClickRace()
+    {
+        Debug.Log(IsServer + " " + IsHost);
+
+        if (!IsServer || !IsHost) return;
+
+        _activeMinigameScene = Loader.Scene.MG_Race.ToString();
+
+        PauseMenuUI.Instance.TogglePauseMenu(false);
+
+        NetworkManager.Singleton.SceneManager.LoadScene(Loader.Scene.MG_Race.ToString(), LoadSceneMode.Additive);
+
+        UpdateButtonAvailability();
+
+        ChangeMusicClientRpc("Race");
+
     }
 
     public void ChangeSceneOnClickLobby()
     {
-        if (!IsServer) return;
+        if (!IsServer || !IsHost) return;
 
-        foreach (NetworkClient client in NetworkManager.Singleton.ConnectedClients.Values)
+        ToggleChangingSceneServerRpc();
+
+        string sceneName1 = "MG_PlatformJump";
+        string sceneName2 = "MG_Race";
+        UnityEngine.SceneManagement.Scene sceneToUnload1 = UnityEngine.SceneManagement.SceneManager.GetSceneByName(sceneName1);
+        UnityEngine.SceneManagement.Scene sceneToUnload2 = UnityEngine.SceneManagement.SceneManager.GetSceneByName(sceneName2);
+
+        if (sceneToUnload1.IsValid())
         {
-            PlayerController playerController = client.PlayerObject.GetComponent<PlayerController>();
+            NetworkManager.Singleton.SceneManager.UnloadScene(sceneToUnload1);
+            _activeMinigameScene = null;
 
-            playerController.isKnockbackable = true;
         }
 
-        NetworkManager.Singleton.SceneManager.LoadScene(_lobbySceneName, LoadSceneMode.Single);
-    }
-
-    public void ChangeSceneOnClickPrototype()
-    {
+        if (sceneToUnload2.IsValid())
         {
-        if (!IsServer) return;
+            NetworkManager.Singleton.SceneManager.UnloadScene(sceneToUnload2);
+            _activeMinigameScene = null;
 
-        foreach (NetworkClient client in NetworkManager.Singleton.ConnectedClients.Values)
-            {
-            PlayerController playerController = client.PlayerObject.GetComponent<PlayerController>();
-
-            playerController.isKnockbackable = true;
         }
 
-        NetworkManager.Singleton.SceneManager.LoadScene(SceneNames.Prototype, LoadSceneMode.Single);
-        }
+
+
+        StartCoroutine(MurderAndRevivePlayers());
+
+        PauseMenuUI.Instance.TogglePauseMenu(false);
+
+
+        UpdateButtonAvailability();
+
+        ChangeMusicClientRpc("Game");
+
     }
 
     [ServerRpc]
@@ -90,8 +195,26 @@ public class NetworkSceneManager : NetworkBehaviour
         {
             PlayerController playerController = client.PlayerObject.GetComponent<PlayerController>();
 
-            playerController.isChangingScene = true;
+            playerController.ReviveServerRpc(playerController.gameObject.GetComponent<NetworkObject>().OwnerClientId);
         }
 
+    }
+
+    private IEnumerator MurderAndRevivePlayers()
+    {
+        GameObject[] players = GameObject.FindGameObjectsWithTag("Player");
+
+        foreach (GameObject player in players)
+        {
+            player.GetComponent<PlayerController>().KillClientRpc(player.GetComponent<NetworkObject>().OwnerClientId);
+            //player.GetComponent<Rigidbody>().AddForce(new Vector3(UnityEngine.Random.Range(-1,1), 1, UnityEngine.Random.Range(-1, 1)) * 10, ForceMode.VelocityChange);
+        }
+
+        yield return new WaitForSeconds(3);
+
+        foreach (GameObject player in players)
+        {
+            player.GetComponent<PlayerController>().ReviveClientRpc(player.GetComponent<NetworkObject>().OwnerClientId);
+        }
     }
 }

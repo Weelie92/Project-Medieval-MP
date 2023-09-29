@@ -9,6 +9,8 @@ public class MG_PlatformJump : MG_Settings, IMinigame, ICollideable
 {
     public static MG_PlatformJump Instance;
 
+    UIMessageSystem UIMessageSystem;
+
     [SerializeField] private GameObject _platformPrefab;
     [SerializeField] private List<GameObject> _platformPrefabs;
     [SerializeField] private GameObject _platformParent;
@@ -28,9 +30,13 @@ public class MG_PlatformJump : MG_Settings, IMinigame, ICollideable
 
     private void Awake()
     {
+
         Instance = this;
 
-        _timerUI = GameObject.FindGameObjectWithTag("UI_Minigame").GetComponentInChildren<MG_UI_Timer>();
+
+
+        UIMessageSystem = UIMessageSystem.Instance;
+
         NetworkManager.Singleton.SceneManager.OnLoadEventCompleted += OnLoadEventCompleted;
     }
 
@@ -43,13 +49,15 @@ public class MG_PlatformJump : MG_Settings, IMinigame, ICollideable
     // 1
     private void OnLoadEventCompleted(string sceneName, LoadSceneMode sceneMode, List<ulong> clientsCompleted, List<ulong> clientsTimedOut)
     {
+
         if (!IsServer) return;
 
         if (ranOnce) return;
         ranOnce = true;
 
-        Vector3 centerTop = new Vector3(0, 5, 2);
-        Vector3 centerBottom = new Vector3(0, 0, 2);
+
+        Vector3 centerTop = new Vector3(0, 25, 2);
+        Vector3 centerBottom = new Vector3(0, 20, 2);
         int halfSize = Mathf.FloorToInt(_gridSize / 2);
         Vector3 startPositionTop = centerTop - new Vector3(halfSize * _gridSpacing, 0, halfSize * _gridSpacing);
         Vector3 startPositionBottom = centerBottom - new Vector3(halfSize * _gridSpacing, 0, halfSize * _gridSpacing);
@@ -66,11 +74,11 @@ public class MG_PlatformJump : MG_Settings, IMinigame, ICollideable
 
                 if (rand < 0.9f)
                 {
-                    index = 0; 
+                    index = 0;
                 }
                 else
                 {
-                    index = Random.Range(1, _platformPrefabs.Count); // Select any other prefab with equal probability
+                    index = Random.Range(1, _platformPrefabs.Count);
                 }
 
                 GameObject platformObjectTop = Instantiate(_platformPrefabs[index], positionTop, Quaternion.identity, _platformParent.transform);
@@ -89,29 +97,22 @@ public class MG_PlatformJump : MG_Settings, IMinigame, ICollideable
             }
         }
 
+        Debug.Log(clientsCompleted.Count);
+
         StartCoroutine(SpawnPlayers(clientsCompleted));
     }
+
 
     // 6
     [ServerRpc]
     public void StartSelectedMinigameServerRpc()
     {
-        // Activate killzone
         Killzone.Instance.isActive = true;
-
-        // Create platforms
-
-        foreach (NetworkClient client in NetworkManager.Singleton.ConnectedClients.Values)
-        {
-            PlayerController playerController = client.PlayerObject.GetComponent<PlayerController>();
-            playerController.isChangingScene = false;
-        }
 
         SetPlayerKnockback(_setPlayerKnockbackBool);
 
         isGameStarted = true;
 
-        InvokeRepeating(nameof(StartCountdownServerRpc), 1f, 1f);
         InvokeRepeating(nameof(CrumbleRandomPlatformServerRpc), .5f, .5f);
     }
 
@@ -211,7 +212,7 @@ public class MG_PlatformJump : MG_Settings, IMinigame, ICollideable
         {
             PlayerController playerController = client.PlayerObject.GetComponent<PlayerController>();
 
-            playerController.isKnockbackable = shouldSet;
+            playerController._isBeingKnockedBack = false;
         }
     }
 
@@ -221,7 +222,6 @@ public class MG_PlatformJump : MG_Settings, IMinigame, ICollideable
 
         if (other.CompareTag("Player"))
         {
-            // Player entered the bottom grid
             StartBottomGridServerRpc();
         }
     }

@@ -12,7 +12,7 @@ public class HUDUIController : MonoBehaviour
     [SerializeField] private GameObject _UI_Quest_Feedbackform;
     [SerializeField] private GameObject _UI_NetworkManager;
 
-    private void Start()
+    private void Awake()
     {
         if(_UI_PauseMenu != null) _UI_PauseMenu.GetComponent<Canvas>().enabled = false;
         if(_UI_Customize != null) _UI_Customize.GetComponent<Canvas>().enabled = false;

@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   periodsOfDay:
   - description: Night End
-    startTime: 4.24
+    startTime: 5.35
     horizonColor: {r: 0.018500218, g: 0.015208514, b: 0.018500218, a: 0}
     zenithColor: {r: 0.052860655, g: 0.006512091, b: 0.057805434, a: 0}
     groundColor: {r: 0.10461649, g: 0.088655606, b: 0.10224175, a: 0}
@@ -43,6 +43,6 @@ MonoBehaviour:
     horizonColor: {r: 0.084905684, g: 0.06928624, b: 0.084905684, a: 0}
     zenithColor: {r: 0.06624117, g: 0.040227838, b: 0.0754717, a: 0}
     groundColor: {r: 0.103773594, g: 0.08859915, b: 0.102415465, a: 0}
-  initialTime: 15
-  timeSystem: 15
-  dayNightCycleDuration: 0.01
+  initialTime: 13.9
+  timeSystem: 13.9
+  dayNightCycleDuration: 0

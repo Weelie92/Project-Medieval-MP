@@ -1,8 +1,10 @@
-using System;
+ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Cinemachine;
+using QFSW.QC;
 using TMPro;
+using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
@@ -10,7 +12,7 @@ using UnityEngine.UI;
 public class CustomizeUI : MonoBehaviour
 {
 
-    
+    public static CustomizeUI Instance;
 
     [Header("UI Buttons")]
     [SerializeField] private Button _maleButton;
@@ -56,7 +58,7 @@ public class CustomizeUI : MonoBehaviour
 
     public int[] activePartsIndex;
 
-    private List<GameObject> _oldEnabledObjects = new List<GameObject>();
+    public List<GameObject> _oldEnabledObjects = new List<GameObject>();
     public List<GameObject> enabledObjects = new List<GameObject>();
 
     public List<GameObject> playerList = new List<GameObject>();
@@ -99,7 +101,11 @@ public class CustomizeUI : MonoBehaviour
 
     [SerializeField] private Vector3 targetShoulderOffset = Vector3.zero;
 
-    
+    private void Awake()
+    {
+
+        Instance = this;
+    }
 
     private void Update()
     {
@@ -126,10 +132,31 @@ public class CustomizeUI : MonoBehaviour
         // SelectOption
     }
 
+    public void InitializePlayerUI(NetworkObject playerNetworkObject)
+    {
+
+        if (playerNetworkObject.IsOwner)
+        {
+            _player = playerNetworkObject.gameObject;
+
+
+
+            Initialize();
+            SaveCustomization();
+        }
+        else
+        {
+            Debug.Log("Player UI not initialized for remote player.");
+        }
+    }
+
+
     private void UpdateCameraPosition()
     {
+        if (_vcam == null) _vcam = _playerController.GetCamera().GetComponent<CinemachineVirtualCamera>();
+
         _vcam.GetCinemachineComponent<Cinemachine3rdPersonFollow>().ShoulderOffset = Vector3.Lerp(_vcam.GetCinemachineComponent<Cinemachine3rdPersonFollow>().ShoulderOffset, targetShoulderOffset, 1f * Time.deltaTime);
-        
+
         if (Vector3.Distance(_vcam.GetCinemachineComponent<Cinemachine3rdPersonFollow>().ShoulderOffset, targetShoulderOffset) < 0.1f)
         {
             _isCameraMoving = false;
@@ -147,7 +174,7 @@ public class CustomizeUI : MonoBehaviour
         else
         {
             RotateTowardsTarget();
-            if (Quaternion.Angle(_player.transform.rotation, Quaternion.Euler(0, playerRotationWhenCustomizing, 0)) < 1f)
+            if (Quaternion.Angle(_player.transform.rotation, Quaternion.Euler(0, playerRotationWhenCustomizing, 0)) < 5f)
             {
                 _isPlayerMoving = false;
             }
@@ -176,13 +203,21 @@ public class CustomizeUI : MonoBehaviour
     
     public void Initialize()
     {
+        if (GameObject.FindGameObjectsWithTag("MainUI").Length > 1)
+        {
+            Destroy(gameObject);
+            return;
+        }
+
+
         if (_isFirstInitialization)
         {
+
             DestroyColorChildren();
             BuildActiveIndexArray();
-            AssignPlayerComponents();
             AssignButtonListeners();
             ShowColorButtons();
+            AssignPlayerComponents();
             BuildLists();
             DisableEnabledObjects();
 
@@ -212,7 +247,7 @@ public class CustomizeUI : MonoBehaviour
         else
         {
             _playerController.isCustomizing = true;
-            _isPlayerMoving = true;
+            _isPlayerMoving = false;
             Cursor.lockState = CursorLockMode.None;
 
             SetOldEnabledObjects();
@@ -247,6 +282,8 @@ public class CustomizeUI : MonoBehaviour
 
     private void DestroyColorChildren()
     {
+        return;
+
         for (int i = _skinColors.transform.childCount - 1; i >= 0; i--)
         {
             Transform child = _skinColors.transform.GetChild(i);
@@ -319,7 +356,7 @@ public class CustomizeUI : MonoBehaviour
         BodyArtcolorShow();
     }
 
-    private void BuildLists()
+    public void BuildLists()
     {
 
         //build out male lists
@@ -446,8 +483,14 @@ public class CustomizeUI : MonoBehaviour
         }
     }
 
+    [Command]
     private void UpdateCharacterOnServer()
     {
+
+        if (_player == null) return; 
+
+        if (_customizePlayerData == null) _customizePlayerData = _player.GetComponent<CustomizePlayerData>();
+
         _customizePlayerData.UpdateCharacterServerRpc(activePartsIndex);
     }
 
@@ -575,7 +618,8 @@ public class CustomizeUI : MonoBehaviour
         }
     }
 
-    private void ActivateEnabledObjects()
+    [Command]
+    public void ActivateEnabledObjects()
     {
         foreach (GameObject g in enabledObjects)
         {
@@ -667,8 +711,10 @@ public class CustomizeUI : MonoBehaviour
         }
     }
 
-    public void SaveCustomization()
+    public void SaveCustomization(bool isReadyScene = false)
     {
+        if (isReadyScene) return;
+
         _isFirstInitialization = false;
 
         _isCameraMoving = true;
@@ -688,6 +734,8 @@ public class CustomizeUI : MonoBehaviour
 
     private void SetActiveParts()
     {
+        if (_customizePlayerData == null) _customizePlayerData = _player.GetComponent<CustomizePlayerData>();
+
         for (int i = 0; i < enabledObjects.Count; i++)
         {
             activePartsIndex[i] = _customizePlayerData.allChildObjects.IndexOf(enabledObjects[i]);

@@ -19,6 +19,12 @@ TagManager:
   - UI_Minigame
   - MinigameManager
   - UI_ScoreBoard
+  - FollowTarget
+  - MainUI
+  - LobbyWorldPrefab
+  - LobbyWorld
+  - UI_ScoreBoardBG
+  - ScoreBoard
   layers:
   - Default
   - TransparentFX

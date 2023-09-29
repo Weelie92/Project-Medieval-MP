@@ -26,6 +26,8 @@ public class PlatformMain : NetworkBehaviour
         isCrumbling = true;
 
 
+        GetComponent<AudioManagerPlatform>().PlayBuildupSound();
+
         if (isBottomGrid)
         {
             StartFlamesCoroutineClientRpc();
@@ -94,10 +96,15 @@ public class PlatformMain : NetworkBehaviour
         StartCoroutine(nameof(PlatformCrumbled));
     }
 
+    
+
     private IEnumerator PlatformCrumbled()
     {
         GetComponent<MeshRenderer>().enabled = false;
         GetComponent<BoxCollider>().enabled = false;
+
+        GetComponent<AudioManagerPlatform>().PlayExplosionSound();
+
 
         SpriteRenderer spriteRenderer = gameObject.GetComponentInChildren<SpriteRenderer>();
 

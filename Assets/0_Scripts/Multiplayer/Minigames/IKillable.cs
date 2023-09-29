@@ -1,3 +1,3 @@
 interface IKillable {
-    void Kill();
+    void KillServerRpc(ulong clientId);
 }

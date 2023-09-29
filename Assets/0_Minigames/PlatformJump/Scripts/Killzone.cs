@@ -27,8 +27,8 @@ public class Killzone : NetworkBehaviour, ICollideable
 
         if (other.gameObject.CompareTag("Player"))
         {
+            Debug.Log("Killed player: " + other.gameObject.name);
             _settings.KillPlayerServerRpc(other.GetComponent<NetworkObject>().OwnerClientId);
-            isActive = false;
         }
     }
 }
